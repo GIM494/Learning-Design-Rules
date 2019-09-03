@@ -4,7 +4,7 @@ This repository contains the code used to implement an algorithm designed to lea
 ## Program function
 The algorithm finds all sets of parent-child classes and parent-child-grandchild classes*, and then outputs information about the attributes of each set to distinct databases. Once these databases have been created, an Association Rule Mining (ARM) algorithm can be run on the databases to generate frequent itemsets.
 
-_*This program MUST be run using python3.6 or later*_
+___**This program MUST be run using python3.6 or later**___
 
 *Changing the value of the DEPTH variable alters how deep in the family hierarchy the algorithm goes. For instance, if DEPTH changed to 1, then databases would only be created for sets of parent-child classes. Alternatively, if DEPTH changed to 3, then databases would be created for sets of parent-child, parent-child-grandchild, and parent-child-grandchild-greatGrandchild classes.
 
