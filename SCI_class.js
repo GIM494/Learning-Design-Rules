@@ -1810,7 +1810,7 @@ exports.findParentChildRelations = function(allAttributes, classGroupings,
         var finalList = attributes.filter(function(elem, pos) {
           return attributes.indexOf(elem) == pos;
         })
-        
+
         // By default the JavaScript sort() method will sort values as strings
         // in alphabetical ascending order; if numbers are sorted as strings,
         // then "6" is bigger than "542", so we have to supply a sort function
@@ -1821,8 +1821,6 @@ exports.findParentChildRelations = function(allAttributes, classGroupings,
 
         // Sort the attributes we found in ascending order
         finalList.sort(sortNumber);
-
-        console.log(finalList);
 
         var data = finalList.join(" ") + "\n";
 
