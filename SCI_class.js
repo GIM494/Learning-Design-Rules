@@ -1798,9 +1798,6 @@ exports.findParentChildRelations = function(allAttributes, classGroupings,
       }
     }
 
-      // Sort the attributes we found in ascending order
-      attributes.sort();
-
       // This is the file we will be outputting to
 
       fileN = analysisFileName + "_subClassOf" + parentClass + ".txt";
@@ -1809,7 +1806,25 @@ exports.findParentChildRelations = function(allAttributes, classGroupings,
       // Current FP Growth implementation will stop when it reads a newline
       // so we don't want it to output newlines when attributes is empty
       if(attributes.length > 0){
-        var data = attributes.join(" ") + "\n";
+        // Remove duplicate elements from attributes
+        var finalList = attributes.filter(function(elem, pos) {
+          return attributes.indexOf(elem) == pos;
+        })
+        
+        // By default the JavaScript sort() method will sort values as strings
+        // in alphabetical ascending order; if numbers are sorted as strings,
+        // then "6" is bigger than "542", so we have to supply a sort function
+        // that we define
+        function sortNumber(a, b) {
+          return a - b;
+        }
+
+        // Sort the attributes we found in ascending order
+        finalList.sort(sortNumber);
+
+        console.log(finalList);
+
+        var data = finalList.join(" ") + "\n";
 
         fs.appendFile(fileN, data, (err) => {
         // In case of a error throw err.
