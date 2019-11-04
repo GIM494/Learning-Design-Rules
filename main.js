@@ -167,10 +167,12 @@ for (const group of groupList.keys()) {
 
 }
 
+//console.log(allAttributes);
 
 // Output the metadata to a file
 var outputFile = "attributeMETAdata_crowdCode.txt";
 sci.outputMetaData(allAttributes, outputFile);
+
 
 for (const group of groupList.keys()){
   var grouping = groupList.get(group);
