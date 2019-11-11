@@ -871,7 +871,6 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
 
          var command = "src:class[src:block/src:function[(src:type['" + returnType.text
                         + "'] and " + "src:name[text()=\"" + fncName.text + "\"])]]";
-         //console.log(command);
 
          attributeList.set(name, id_start.id);
          queryMap.set(command, id_start.id);

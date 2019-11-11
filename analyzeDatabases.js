@@ -28,9 +28,6 @@ var fileLocMap = new Map();
 var array = fs.readFileSync('fileLocations.txt').toString().split("\n");
 var aeFile;
 for(i in array) {
-   // console.log(array[i]);
-
-   //console.log(array[i].split(".")[1]);
 
     if(array[i].split(".")[1] == "txt"){
         aeFile = array[i];
@@ -48,9 +45,6 @@ for(i in array) {
       }
     }
 }
-
-//console.log(fileLocMap);
-
 
  var SUPPORT = 60;
 // We want to analyze each of the files in this list
@@ -75,23 +69,14 @@ for (var i = 0; i < fileList.length; i++){
 // Add xml files that FI's apply to, to bottom of output file
 for(var i = 0; i < fileList.length; i++){
 
-
-
   // Add list of xml files to bottom of analysis file
   var f = "output" + i + ".txt";
   var stream = fs.createWriteStream(f, {flags:'a'});
   var arr = fileLocMap.get(fileList[i]);
-
-  //console.log(i);
-  //console.log(fileList[i]);
-  //console.log(arr);
   var data = "";
-  for(var j = 0; j < arr.length; j++){
 
-    //console.log(fileList[i]);
-    //console.log(arr[j]);
+  for(var j = 0; j < arr.length; j++){
     data = data + arr[j] + "\n";
-    //stream.write("\n");
   }
   stream.write(data);
   stream.close();

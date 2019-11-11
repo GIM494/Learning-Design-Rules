@@ -15,9 +15,6 @@ const fs = require('fs');
 const readline = require('readline');
 var path = require("path");
 
-// Stores the attributes for all the lines
-
-
 // Path to directory with xml files we wish to iterate through
 // Currenlty, the directory is the directory main.js is running in
 var directoryPath = path.join(__dirname);
@@ -49,16 +46,12 @@ for(var q = 0; q < data.length; q++){
   // store that information
   if(!isNaN(dataPieces[0]) && dataPieces[0] != ""){
     idNo = dataPieces[0];
-
     dataPieces = data[q].split(idNo + " ");
     desc = dataPieces[1];
-
   }
   else{
     qury = data[q];
-    //console.log(qury);
   }
-
   // Store the info
   attributeMap.set(idNo, desc);
   queryMap.set(idNo, qury);
@@ -74,24 +67,16 @@ for(var i = 0; i < fileList.length; i++){
 // Now we are ready to create our modified output text files
 for (var i = 0; i < fileList.length; i++){
 
-
   var contents = fs.readFileSync(fileList[i]);
   var databaseLines = (contents.toString()).split("\n");
 
-  //console.log(contents);
-  //console.log(databaseLines);
-
   for(var j = 0; j < databaseLines.length; j++){
-
-    //console.log(databaseLines[j]);
-    //console.log((databaseLines[j]).includes(".xml"));
 
     // If it is an FI, then we want to parse the info in the FI so we can
     // output the attribute info
     while(databaseLines[j] != undefined && !(databaseLines[j]).includes(".xml")){
       // Get all the attributes
       var allAttributes = (databaseLines[j]).split(" #")[0];
-      //console.log(allAttributes);
 
       // We create a new file that is modified with this information
       var newFileName = fileList[i].split(".")[0] + "_mod.txt";
@@ -100,29 +85,16 @@ for (var i = 0; i < fileList.length; i++){
 
         // Write the FI set to the new file
         stream = fs.writeFileSync(newFileName, allAttributes + "\n",  {flag:'a'});
-        //stream.write(allAttributes + "\n");
-        //stream.close();
 
         var indivAttributes = allAttributes.split(" ");
         for(var k = 0; k < indivAttributes.length; k++){
 
           if (indivAttributes[k] != ""){
-              //console.log(indivAttributes[k]);
-              // Print out the attribute desc and qury for
+              // Output the attribute desc and qury for each attribute
               stream = fs.writeFileSync(newFileName, indivAttributes[k] + " "
                           + attributeMap.get(indivAttributes[k]) + "\n",  {flag:'a'});
-              //stream.write(indivAttributes[k] + " "
-              //             + attributeMap.get(indivAttributes[k]) + "\n");
-              //stream.write(queryMap.get(indivAttributes[k]) + "\n");
-              //stream.close();
-              //console.log(indivAttributes[j] + " "
-              //             + attributeMap.get(indivAttributes[j]));
-              //console.log(queryMap.get(indivAttributes[j]));
-
+              stream = fs.writeFileSync(newFileName, queryMap.get(indivAttributes[k]) + "\n",  {flag:'a'});
           }
-
-          // console.log(parseInt(indivAttributes[k]));
-
         }
       }
       j++;
@@ -137,8 +109,6 @@ for (var i = 0; i < fileList.length; i++){
     var fileName = fileList[i].split(".")[0] + "_mod.txt";
     if (databaseLines[j] != undefined && (databaseLines[j]).includes(".xml")){
       stream = fs.writeFileSync(fileName, databaseLines[j] + "\n", {flag:'a'});
-      //stream.write();
-      //stream.close();
     }
   }
 
