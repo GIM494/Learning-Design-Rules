@@ -10,13 +10,18 @@ var subElement = et.SubElement;
 
 
 
-exports.outputMetaData = function(allAttributes, outputFile){
+exports.outputMetaData = function(allAttributes, outputFile, queryMap){
 
     var entries = Array.from(allAttributes.entries());
+    var queries = Array.from(queryMap.entries());
+
     var data = "";
 
     for(var x = 0; x < entries.length; x++){
-      data += entries[x][1] + " " + entries[x][0] + "\n";
+      // Just while debugging is happening; remove after last queries
+      // developed
+
+        data += entries[x][1] + " " + entries[x][0] + "\n" + queries[x][0] + "\n";
     }
 
     fs.appendFile(outputFile, data, (err) => {
@@ -112,7 +117,7 @@ exports.addChildren = function(parent, childParent, groupID, currDepth, groupLis
 }
 
 
-exports.addParentChildRelations = function(id_start, classGroupings, attributeList, classLocations, parentInfo){
+exports.addParentChildRelations = function(id_start, classGroupings, attributeList, classLocations, parentInfo, queryMap){
 
   var parentClass = classGroupings[classGroupings.length-1];
   var subCLfncs = [];
@@ -202,7 +207,14 @@ exports.addParentChildRelations = function(id_start, classGroupings, attributeLi
 
               // Check if this attribute has been seen globally
               if(!attributeList.has(name)){
+
+                // QUERY NOT YET KNOWN
+                var command = "stand in command for attribute " + name;
+                //console.log(command);
+
                 attributeList.set(name, id_start.id);
+                queryMap.set(command, id_start.id);
+
                 id_start.id += 1;
               }
               name = "";
@@ -214,20 +226,20 @@ exports.addParentChildRelations = function(id_start, classGroupings, attributeLi
         }
 
         // Finds attributes having to do with the annotations above the class
-        sciFncs.findClassAnnotations(subCL[j], attributeList, id_start);
+        sciFncs.findClassAnnotations(subCL[j], attributeList, id_start, queryMap);
 
         // Finds attributes having to do with the constructors in the
         // class
-        sciFncs.findConstructors(subCL[j], attributeList, id_start);
+        sciFncs.findConstructors(subCL[j], attributeList, id_start, queryMap);
 
         // Finds attributes having to do with member variables
-        sciFncs.findMemberVars(subCL[j], attributeList, id_start);
+        sciFncs.findMemberVars(subCL[j], attributeList, id_start, queryMap);
 
         // Finds attributes having to do with class implementations
-        sciFncs.findImplements(subCL[j], attributeList, id_start);
+        sciFncs.findImplements(subCL[j], attributeList, id_start, queryMap);
 
         // Finds attributes about class visibility and class functions
-        sciFncs.findClsFunctions(subCL[j], attributeList, id_start);
+        sciFncs.findClsFunctions(subCL[j], attributeList, id_start, queryMap);
 
       }
     }
@@ -238,7 +250,7 @@ exports.addParentChildRelations = function(id_start, classGroupings, attributeLi
 
 exports.findParentChildRelations = function(allAttributes, classGroupings,
                                             analysisFileName, classLocations,
-                                            parentInfo){
+                                            parentInfo, fileAnalysisMap){
 
   var parentClass = classGroupings[classGroupings.length-1];
   var subCLfncs = [];
@@ -393,10 +405,14 @@ exports.findParentChildRelations = function(allAttributes, classGroupings,
 
           var data = finalList.join(" ") + "\n";
 
+          var stream = fs.createWriteStream(fileN, {flags:'a'});
+          stream.write(data);
+          stream.end();
+          /*
           fs.appendFile(fileN, data, (err) => {
           // In case of a error throw err.
           if (err) throw err;
-          });
+        });*/
 
         }
 
@@ -410,21 +426,29 @@ exports.findParentChildRelations = function(allAttributes, classGroupings,
     }
   }// End of outermost for loop
 
-    // We need to put the path to the file at that contains this class
-    // at the top of the file we are outputting to
-
+    // Record that this file was used to contribute to this database
     var fileN = analysisFileName + "_subClassOf" + parentClass + ".txt";
-    var data = fs.readFileSync(fileN); //read existing contents into data
-    var fd = fs.openSync(fileN, 'w+');
-    var newStuff = listOfFiles.join("\n") + "\n";
-    var buffer = new Buffer(newStuff);
+    var newStuff = listOfFiles.join("\n");
 
-    fs.writeSync(fd, buffer, 0, buffer.length, 0); //write new data
-    fs.writeSync(fd, data, 0, data.length, buffer.length); //append old data
+    fileAnalysisMap.set(fileN, newStuff);
 
-    fs.close(fd, (err) => {
-      // In case of a error throw err.
-      if (err) throw err;
-    });
 
+}
+
+exports.outputFileAnalysisData = function(fileAnalysisMap){
+
+  var entries = Array.from(fileAnalysisMap.entries());
+  //console.log(fileAnalysisMap);
+
+  var fileN = "fileLocations.txt";
+  var stream = fs.createWriteStream(fileN, {flags:'w'});
+
+  for(var x = 0; x < entries.length; x++){
+
+    stream.write(entries[x][0]);
+    stream.write("\n");
+    stream.write(entries[x][1]);
+    stream.write("\n");
+
+  }
 }

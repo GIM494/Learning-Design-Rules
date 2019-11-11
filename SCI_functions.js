@@ -1,4 +1,4 @@
-exports.findClassAnnotations = function(subCL, attributeList, id_start){
+exports.findClassAnnotations = function(subCL, attributeList, id_start, queryMap){
 
   // Now we look for other attributes in the class
   // First we will output all the annotations on a class
@@ -49,7 +49,13 @@ exports.findClassAnnotations = function(subCL, attributeList, id_start){
 
       if(!attributeList.has(clsAnnotName)){
 
+        // QUERY NOT YET FOUND
+        var command = "//src::stand in command for attribute " + clsAnnotName;
+        // console.log(command);
+
         attributeList.set(clsAnnotName, id_start.id);
+        queryMap.set(command, id_start.id);
+
         id_start.id += 1;
 
       }
@@ -57,7 +63,7 @@ exports.findClassAnnotations = function(subCL, attributeList, id_start){
   }
 }
 
-exports.findConstructors = function(subCL, attributeList, id_start){
+exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
 
   // What kind of constructor the class has
   // Choose last constructor because sometimes a default is defined and
@@ -81,7 +87,13 @@ exports.findConstructors = function(subCL, attributeList, id_start){
         // Check if attribute has been seen globally
         if(!attributeList.has(name)){
 
+          // QUERY NOT YET FOUND
+          var command = "//src::stand in command for attribute " + name;
+          //console.log(command);
+
           attributeList.set(name, id_start.id);
+          queryMap.set(command, id_start.id);
+
           id_start.id += 1;
 
         }
@@ -123,15 +135,26 @@ exports.findConstructors = function(subCL, attributeList, id_start){
         if(memVarSet.length > 0){
           memVarSet.sort();
 
+          var augmentedMemVarSet = memVarSet.slice(0);
+
           for(var x = 0; x < memVarSet.length; x++){
-            memVarSet[x] = " member variable with name \"" + memVarSet[x] + "\"";
+            augmentedMemVarSet[x] = " member variable with name \"" + memVarSet[x] + "\"";
           }
-          name = "constructor must set " + memVarSet.join(" and ");
+          name = "constructor must set " + augmentedMemVarSet.join(" and ");
 
           // Check if attribute has been seen globally
           if(!attributeList.has(name)){
 
+            var command = "src:class[src:block/src:constructor[(src:parameter_list/src:parameter/src:decl[src:name[text()=\""
+                          + memVarSet[0] + "\"]]";
+            for (var x = 1; x < memVarSet.length; x++){
+              command = command + " and " + "src:class[src:block/src:constructor[(src:parameter_list/src:parameter/src:decl[src:name[text()=\""
+                            + memVarSet[x] + "\"]]";
+            }
+
             attributeList.set(name, id_start.id);
+            queryMap.set(command, id_start.id);
+
             id_start.id += 1;
 
             name = "";
@@ -153,9 +176,14 @@ exports.findConstructors = function(subCL, attributeList, id_start){
 
             if(!attributeList.has(name)){
 
-              attributeList.set(name, id_start.id);
-              id_start.id += 1;
+              // QUERY NOT YET KNOWN
+              var command = "//src::stand in command for attribute " + name;
+              // console.log(command);
 
+              attributeList.set(name, id_start.id);
+              queryMap.set(command, id_start.id);
+
+              id_start.id += 1;
               name = "";
             }
           }
@@ -169,9 +197,14 @@ exports.findConstructors = function(subCL, attributeList, id_start){
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
 
-          attributeList.set(name, id_start.id);
-          id_start.id += 1;
+          // QUERY NOT YET KNOWN
+          var command = "//src::stand in command for attribute " + name;
+          // console.log(command);
 
+          attributeList.set(name, id_start.id);
+          queryMap.set(command, id_start.id);
+
+          id_start.id += 1;
           name = "";
 
         }
@@ -222,9 +255,21 @@ exports.findConstructors = function(subCL, attributeList, id_start){
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
 
-          attributeList.set(name, id_start.id);
-          id_start.id += 1;
+          // Make query
+          var command = "src:class[src:block/src:constructor[(src:parameter_list/src:parameter/src:decl[src:type['"
+                        + constrParamTypes[0] + "']]";
 
+          for(var u = 1; u < constrParamTypes.length; u++){
+            command = command + " and "
+                      + "src:class[src:block/src:constructor[(src:parameter_list/src:parameter/src:decl[src:type['"
+                      + constrParamTypes[u] + "']]";
+          }
+          //console.log(command);
+
+          attributeList.set(name, id_start.id);
+          queryMap.set(command, id_start.id);
+
+          id_start.id += 1;
           name = "";
 
         }
@@ -236,9 +281,14 @@ exports.findConstructors = function(subCL, attributeList, id_start){
           // Check if this attribute has been seen globally
           if(!attributeList.has(name)){
 
-            attributeList.set(name, id_start.id);
-            id_start.id += 1;
+            // QUERY NOT FOUND YET
+            var command = "//src::stand in command for attribute " + name;
+            // console.log(command);
 
+            attributeList.set(name, id_start.id);
+            queryMap.set(command, id_start.id);
+
+            id_start.id += 1;
             name = "";
           }
         }
@@ -252,15 +302,20 @@ exports.findConstructors = function(subCL, attributeList, id_start){
     // Check if this attribute has been seen globally
     if(!attributeList.has(name)){
 
-      attributeList.set(name, id_start.id);
-      id_start.id += 1;
+      // QUERY NOT YET KNOWN
+      var command = "//src::stand in command for attribute " + name;
+      // console.log(command);
 
+      attributeList.set(name, id_start.id);
+      queryMap.set(command, id_start.id);
+
+      id_start.id += 1;
       name = "";
     }
   }
 }
 
-exports.findMemberVars = function(subCL, attributeList, id_start){
+exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
   // The way we output information about member variables here impacts the
   // interpretations of associated attributes. If there is a member field
   // that has an annotation, two attributes will be output. For example,
@@ -290,9 +345,14 @@ exports.findMemberVars = function(subCL, attributeList, id_start){
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
 
-          attributeList.set(name, id_start.id);
-          id_start.id += 1;
+          var command = "src:class[src:block/src:decl_stmt/src:decl/src:name[text()=\""
+                        + memberVarName.text + "\"] ";
+          //console.log(command);
 
+          attributeList.set(name, id_start.id);
+          queryMap.set(command, id_start.id);
+
+          id_start.id += 1;
           name = "";
         }
       }
@@ -342,11 +402,16 @@ exports.findMemberVars = function(subCL, attributeList, id_start){
           }
 
           // Check if this attribute has been seen globally
-          if(!attributeList.has(memberVarAnnotAttr )){
+          if(!attributeList.has(memberVarAnnotAttr)){
+
+            // QUERY NOT FOUND YET
+            var command = "//src::stand in command for attribute " + memberVarAnnotAttr;
+            // console.log(command);
 
             attributeList.set(memberVarAnnotAttr , id_start.id);
-            id_start.id += 1;
+            queryMap.set(command, id_start.id);
 
+            id_start.id += 1;
             name = "";
           }
         }
@@ -366,9 +431,14 @@ exports.findMemberVars = function(subCL, attributeList, id_start){
         // Check whether this attribute has been seen globally
         if(!attributeList.has(memberVarTypeAttr) && memberVarType.text != ""){
 
-          attributeList.set(memberVarTypeAttr, id_start.id);
-          id_start.id += 1;
+          var command = "src:class[descendant-or-self::src:decl_stmt/src:decl[src:type['"
+                        + memberVarType.text + "']]]";
+          //console.log(command);
 
+          attributeList.set(memberVarTypeAttr, id_start.id);
+          queryMap.set(command, id_start.id);
+
+          id_start.id += 1;
           name = "";
         }
 
@@ -384,7 +454,15 @@ exports.findMemberVars = function(subCL, attributeList, id_start){
                                        + memberVarType.text + "\"";
             // Check whether attribute has been seen globally
             if(!attributeList.has(memberVarNameAndType)){
+
+              var command = "src:class[descendant-or-self::src:decl_stmt/src:decl[src:type['"
+                            + memberVarType.text + "']]]" + " and src:name[text()=\""
+                            + memberVarName.text + "\"])]]";
+              //console.log(command);
+
               attributeList.set(memberVarNameAndType, id_start.id);
+              queryMap.set(command, id_start.id);
+
               id_start.id += 1;
             }
         }
@@ -394,7 +472,7 @@ exports.findMemberVars = function(subCL, attributeList, id_start){
 }
 
 
-exports.findImplements = function(subCL, attributeList, id_start){
+exports.findImplements = function(subCL, attributeList, id_start, queryMap){
 
   // What a class implements
   var classImplements = subCL.find('super/implements');
@@ -403,16 +481,22 @@ exports.findImplements = function(subCL, attributeList, id_start){
            + (classImplements.find('name')).text + "\"";
      // Check whether attribute has been seen globally
      if(!attributeList.has(name)){
-       attributeList.set(name, id_start.id);
-       id_start.id += 1;
 
+       var command = "src:class[src:super/src:implements/src:name[text()=\""
+                     + (classImplements.find('name')).text + "\"]]";
+        //console.log(command);
+
+       attributeList.set(name, id_start.id);
+       queryMap.set(command, id_start.id);
+
+       id_start.id += 1;
        name = "";
     }
   }
 
 }
 
-exports.findClsFunctions = function(subCL, attributeList, id_start){
+exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
 
   // Class visibility specifier
   var clsSpecificity = subCL.find('specifier');
@@ -428,7 +512,13 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
   var classSpecName = "is " + clsSpecificity + " class";
   // Check wether attribute has been seen globally
   if(!attributeList.has(classSpecName)){
+
+    var command = "src:class[src:specifier[text()=\"" + clsSpecificity + "\"]]";
+    //console.log(command);
+
     attributeList.set(classSpecName, id_start.id);
+    queryMap.set(command, id_start.id);
+
     id_start.id += 1;
 
  }
@@ -453,7 +543,7 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
     // This will capture visibility specifiers, static, and abstract
     // functions
     var fncSpec = fnc.findall('specifier');
-    var fncSpecType = " ";
+    var fncSpecType = "";
 
     // If the function didn't have a visibility specifier then we
     // default to the class' visibility
@@ -475,6 +565,11 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
       else{
         fncSpecType = fncSpec[0].text;
       }
+
+      if(fncSpecType == ""){
+        fncSpecType = "public";
+      }
+
       // Check for other keywords such as abstract or static
       for(var n = 0; n < fncSpec.length; n++){
         var spec = fncSpec[n];
@@ -490,15 +585,22 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
            + fncSpecType
            + "\"  and name \""
            + fncName.text + "\"";
-    fncSpecType = "";
 
     // Check whether attribute has been seen globally
     if(!attributeList.has(name)){
-      attributeList.set(name, id_start.id);
-      id_start.id += 1;
 
+      var command = "src:class[src:block/src:function[(src:specifier[text()=\""
+                   + fncSpecType + "\"] and src:name[text()=\"" + fncName.text + "\"])]]";
+      //console.log(command);
+
+      attributeList.set(name, id_start.id);
+      queryMap.set(command, id_start.id);
+
+      id_start.id += 1;
       name = "";
    }
+
+   fncSpecType = "";
 
    var allExpr = fnc.findall('.//expr');
    for(var g = 0; g < allExpr.length; g++){
@@ -520,9 +622,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
 
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
-         attributeList.set(name, id_start.id);
-         id_start.id += 1;
 
+         // QUERY NOT FOUND YET
+         var command = "//src::stand in command for attribute " + name;
+         // console.log(command);
+
+         attributeList.set(name, id_start.id);
+         queryMap.set(command, id_start.id);
+
+         id_start.id += 1;
          name = "";
        }
      }
@@ -544,9 +652,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
 
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
-         attributeList.set(name, id_start.id);
-         id_start.id += 1;
 
+         // QUERY NOT FOUND YET
+         var command = "//src::stand in command for attribute " + name;
+         // console.log(command);
+
+         attributeList.set(name, id_start.id);
+         queryMap.set(command, id_start.id);
+
+         id_start.id += 1;
          name = "";
        }
      }
@@ -559,9 +673,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
 
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
-         attributeList.set(name, id_start.id);
-         id_start.id += 1;
 
+         // QUERY NOT FOUND YET
+         var command = "//src::stand in command for attribute " + name;
+         // console.log(command);
+
+         attributeList.set(name, id_start.id);
+         queryMap.set(command, id_start.id);
+
+         id_start.id += 1;
          name = "";
        }
 
@@ -578,9 +698,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
 
         // Check whether attribute has been seen globally
         if(!attributeList.has(name)){
-          attributeList.set(name, id_start.id);
-          id_start.id += 1;
 
+          // QUERY NOT FOUND YET
+          var command = "//src::stand in command for attribute " + name;
+          // console.log(command);
+
+          attributeList.set(name, id_start.id);
+          queryMap.set(command, id_start.id);
+
+          id_start.id += 1;
           name = "";
         }
        }
@@ -594,9 +720,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
      name = "function of name \"" + fncName.text + "\" has no parameters";
      // Check whether attribute has been seen globally
      if(!attributeList.has(name)){
-       attributeList.set(name, id_start.id);
-       id_start.id += 1;
 
+       // QUERY NOT FOUND YET
+       var command = "//src::stand in command for attribute " + name;
+       // console.log(command);
+
+       attributeList.set(name, id_start.id);
+       queryMap.set(command, id_start.id);
+
+       id_start.id += 1;
        name = "";
      }
    }
@@ -613,7 +745,7 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
          paramType = paramType.find('name');
        }
 
-       if (!fncTypes.includes(paramType.text)){
+       if (!fncTypes.includes(paramType.text) && paramType.text != ""){
          fncTypes.push(paramType.text);
        }
      }
@@ -638,9 +770,21 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
 
         // Check whether attribute has been seen globally
         if(!attributeList.has(name)){
-          attributeList.set(name, id_start.id);
-          id_start.id += 1;
 
+          // Make the query/command
+          command = "src:class[src:block/src:function[(src:name[text()=\""
+                    + fncName.text + "\"]";
+          for (var m = 0; m < fncTypes.length; m++){
+            command = command + " and src:parameter_list/src:parameter/src:decl[src:type['"
+                        + fncTypes[m] +"']]";
+          }
+          //console.log(name);
+          //console.log(command);
+
+          attributeList.set(name, id_start.id);
+          queryMap.set(command, id_start.id);
+
+          id_start.id += 1;
           name = "";
         }
      }
@@ -672,7 +816,14 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
 
          // Check whether attribute has been seen globally
          if(!attributeList.has(attrName)){
+
+           // QUERY NOT YET FOUND
+           var command = "//src::stand in command for attribute " + attrName;
+           // console.log(command);
+
            attributeList.set(attrName, id_start.id);
+           queryMap.set(command, id_start.id);
+
            id_start.id += 1;
 
          }
@@ -695,9 +846,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
                 + "\" of type \"void\"";
         // Check whether attribute has been seen globally
         if(!attributeList.has(name)){
-          attributeList.set(name, id_start.id);
-          id_start.id += 1;
 
+          var command = "src:class[src:block/src:function[(src:type['void'] and "
+                         + "src:name[text()=\"" + fncName.text + "\"])]]";
+          //console.log(command);
+
+          attributeList.set(name, id_start.id);
+          queryMap.set(command, id_start.id);
+
+          id_start.id += 1;
           name = "";
         }
      }
@@ -711,9 +868,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
 
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
-         attributeList.set(name, id_start.id);
-         id_start.id += 1;
 
+         var command = "src:class[src:block/src:function[(src:type['" + returnType.text
+                        + "'] and " + "src:name[text()=\"" + fncName.text + "\"])]]";
+         //console.log(command);
+
+         attributeList.set(name, id_start.id);
+         queryMap.set(command, id_start.id);
+
+         id_start.id += 1;
          name = "";
        }
      }
@@ -764,9 +927,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start){
 
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
-          attributeList.set(name, id_start.id);
-          id_start.id += 1;
 
+          // QUERY NOT YET FOUND
+          var command = "//src::stand in command for attribute " + name;
+          // console.log(command);
+
+          attributeList.set(name, id_start.id);
+          queryMap.set(command, id_start.id);
+
+          id_start.id += 1;
           name = "";
         }
      }
@@ -1136,6 +1305,7 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
                                          + memberVarType.text + "\"";
               // Check whether attribute has been seen globally
               if(allAttributes.has(memberVarNameAndType)){
+
                 attributes.push(allAttributes.get(memberVarNameAndType));
               }
           }
@@ -1345,7 +1515,7 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
          paramType = paramType.find('name');
        }
 
-       if (!fncTypes.includes(paramType.text)){
+       if (!fncTypes.includes(paramType.text) && paramType.text != ""){
          fncTypes.push(paramType.text);
        }
      }

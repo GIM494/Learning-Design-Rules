@@ -17,6 +17,9 @@ var analysisFileName = "AE_crowdcode";
 var id_start = 1;
 var allAttributes = new Map();
 
+// This is to keep track of the XML queries used for each of the attributes
+var queryMap = new Map();
+
 // This variable will always be used when trying to obtain the
 // root for each file
 var classRoot;
@@ -26,6 +29,9 @@ var childParent = new Map();
 
 // Used to keep track of where certain classes had been seen
 var classLocations = new Map();
+
+// Used to keep track of what xml files were used to create what databases
+var fileAnalysisMap = new Map();
 
 // This class is used later to group info about parent classes
 class classNode {
@@ -162,19 +168,24 @@ for (const group of groupList.keys()) {
 
   var merged = new Map(allAttributes,
                        sci.addParentChildRelations(id_start, groupList.get(group),
-                       allAttributes, classLocations, parentInfo));
+                       allAttributes, classLocations, parentInfo, queryMap));
   allAttributes = merged;
 
 }
+
+//console.log(queryMap);
 
 //console.log(allAttributes);
 
 // Output the metadata to a file
 var outputFile = "attributeMETAdata_crowdCode.txt";
-sci.outputMetaData(allAttributes, outputFile);
+sci.outputMetaData(allAttributes, outputFile, queryMap);
 
 
 for (const group of groupList.keys()){
   var grouping = groupList.get(group);
-  sci.findParentChildRelations(allAttributes, grouping, analysisFileName, classLocations, parentInfo);
+  sci.findParentChildRelations(allAttributes, grouping, analysisFileName,
+                               classLocations, parentInfo, fileAnalysisMap);
 }
+
+sci.outputFileAnalysisData(fileAnalysisMap);
