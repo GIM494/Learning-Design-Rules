@@ -121,6 +121,7 @@ exports.addParentChildRelations = function(id_start, classGroupings, attributeLi
 
   var parentClass = classGroupings[classGroupings.length-1];
   var subCLfncs = [];
+  var classTree;
   // Get all the children classes' info
 
   // This array is to keep track of what functions are overridden in
@@ -173,7 +174,6 @@ exports.addParentChildRelations = function(id_start, classGroupings, attributeLi
 
         if(parentInfo.get(parentClass) != undefined){
 
-          var parentFncsOverridden = new Array((parentInfo.get(parentClass).length)).fill(true);
           // This will contain a list of functions that are present in both
           // the parent class and the child class.
           var matchingFunctions;
@@ -254,6 +254,7 @@ exports.findParentChildRelations = function(allAttributes, classGroupings,
 
   var parentClass = classGroupings[classGroupings.length-1];
   var subCLfncs = [];
+  var classTree;
 
   // Empty the analysisFile first in case anything has been written before
   fileN = analysisFileName + "_subClassOf" + parentClass + ".txt";
@@ -264,7 +265,7 @@ exports.findParentChildRelations = function(allAttributes, classGroupings,
   });
 
   // Used to keep track of all the files we have accessed
-  listOfFiles = [];
+  var listOfFiles = [];
 
   // This array is to keep track of what functions are overridden in
   // the child class; we assume they are overridden, but once we
@@ -317,7 +318,6 @@ exports.findParentChildRelations = function(allAttributes, classGroupings,
 
         if(parentInfo.get(parentClass) != undefined){
 
-          var parentFncsOverridden = new Array((parentInfo.get(parentClass).length)).fill(true);
           // This will contain a list of functions that are present in both
           // the parent class and the child class.
           var matchingFunctions;

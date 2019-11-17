@@ -7,7 +7,7 @@ exports.findClassAnnotations = function(subCL, attributeList, id_start, queryMap
 
     for(var k = 0 ; k < clsAnnotCandidate.length; k++){
 
-      clsAnnot = clsAnnotCandidate[k];
+      var clsAnnot = clsAnnotCandidate[k];
 
       var annotArgs = clsAnnot.findall('.//argument/expr');
 
@@ -69,6 +69,7 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
   // Choose last constructor because sometimes a default is defined and
   // then re-defined by another constructor (see Microtask.java)
   var constructor = subCL.findall('block/constructor');
+  var name;
 
   if(constructor.length > 0){
     for(var q = 0; q < constructor.length; q++){
@@ -82,7 +83,7 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
       var constrBodyList = constructorBody.find(".*");
       if(constrBodyList != undefined){
 
-        var name = "class with non-empty constructor";
+        name = "class with non-empty constructor";
 
         // Check if attribute has been seen globally
         if(!attributeList.has(name)){
@@ -97,6 +98,7 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
           id_start.id += 1;
 
         }
+        name = "";
 
         // Constructor sets member variables
         var constructorExpr = constructorBody.findall('expr_stmt/expr');
@@ -156,10 +158,8 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
             queryMap.set(command, id_start.id);
 
             id_start.id += 1;
-
-            name = "";
-
           }
+          name = "";
         }
 
         // Check for calls to constructor
@@ -184,8 +184,8 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
               queryMap.set(command, id_start.id);
 
               id_start.id += 1;
-              name = "";
             }
+            name = "";
           }
         }
       }
@@ -205,9 +205,8 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
           queryMap.set(command, id_start.id);
 
           id_start.id += 1;
-          name = "";
-
         }
+        name = "";
       }
 
       // Assume all parameters passed to the constructor are stored
@@ -270,9 +269,8 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
           queryMap.set(command, id_start.id);
 
           id_start.id += 1;
-          name = "";
-
         }
+        name = "";
       }
       else{
         // If the constructor has parameters and all of them were stored
@@ -289,8 +287,8 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
             queryMap.set(command, id_start.id);
 
             id_start.id += 1;
-            name = "";
           }
+          name = "";
         }
       }
     }
@@ -310,8 +308,8 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
       queryMap.set(command, id_start.id);
 
       id_start.id += 1;
-      name = "";
     }
+    name = "";
   }
 }
 
@@ -330,7 +328,7 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
   // if only the member field without annotation version of the attribute
   // is frequently associated, then we know that that member field was
   // frequent but not the annotation itself.
-
+  var name;
   var declarations = subCL.findall('block/decl_stmt/decl');
   if (declarations != null){
 
@@ -353,8 +351,8 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
           queryMap.set(command, id_start.id);
 
           id_start.id += 1;
-          name = "";
         }
+        name = "";
       }
 
       // Generate feature for all member variable names with annotations
@@ -412,7 +410,6 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
             queryMap.set(command, id_start.id);
 
             id_start.id += 1;
-            name = "";
           }
         }
       }
@@ -425,22 +422,22 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
         if(memberVarType.text == null){
           memberVarType = memberVarType.find('name');
         }
-        memberVarTypeAttr = "class has member field of type \""
-                            + memberVarType.text + "\"";
+        name = "class has member field of type \""
+               + memberVarType.text + "\"";
 
         // Check whether this attribute has been seen globally
-        if(!attributeList.has(memberVarTypeAttr) && memberVarType.text != ""){
+        if(!attributeList.has(name) && memberVarType.text != ""){
 
           var command = "src:class[descendant-or-self::src:decl_stmt/src:decl[src:type['"
                         + memberVarType.text + "']]]";
           //console.log(command);
 
-          attributeList.set(memberVarTypeAttr, id_start.id);
+          attributeList.set(name, id_start.id);
           queryMap.set(command, id_start.id);
 
           id_start.id += 1;
-          name = "";
         }
+        name = "";
 
         // Generate feature for all member variable names with types
         if(memberVarName.text != null && memberVarType.text != null){
@@ -448,23 +445,24 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
           if(memberVarType.text == ""){
             memberVarType = memberVarType.find('name');
           }
-          var memberVarNameAndType = "class has member field of name \""
-                                       + memberVarName.text
-                                       + "\" of type \""
-                                       + memberVarType.text + "\"";
+          name = "class has member field of name \""
+                 + memberVarName.text
+                 + "\" of type \""
+                 + memberVarType.text + "\"";
             // Check whether attribute has been seen globally
-            if(!attributeList.has(memberVarNameAndType)){
+            if(!attributeList.has(name)){
 
               var command = "src:class[descendant-or-self::src:decl_stmt/src:decl[src:type['"
                             + memberVarType.text + "']]]" + " and src:name[text()=\""
                             + memberVarName.text + "\"])]]";
               //console.log(command);
 
-              attributeList.set(memberVarNameAndType, id_start.id);
+              attributeList.set(name, id_start.id);
               queryMap.set(command, id_start.id);
 
               id_start.id += 1;
             }
+            name = "";
         }
       }
     }
@@ -490,13 +488,15 @@ exports.findImplements = function(subCL, attributeList, id_start, queryMap){
        queryMap.set(command, id_start.id);
 
        id_start.id += 1;
-       name = "";
     }
+    name = "";
   }
 
 }
 
 exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
+  // Attribute name
+  var name = "";
 
   // Class visibility specifier
   var clsSpecificity = subCL.find('specifier');
@@ -509,19 +509,21 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
     clsSpecificity = clsSpecificity.text;
   }
 
-  var classSpecName = "is " + clsSpecificity + " class";
+  name = "is " + clsSpecificity + " class";
   // Check wether attribute has been seen globally
-  if(!attributeList.has(classSpecName)){
+  if(!attributeList.has(name)){
 
     var command = "src:class[src:specifier[text()=\"" + clsSpecificity + "\"]]";
     //console.log(command);
 
-    attributeList.set(classSpecName, id_start.id);
+    attributeList.set(name, id_start.id);
     queryMap.set(command, id_start.id);
 
     id_start.id += 1;
 
  }
+ // Clear the contents of the variable
+ name = "";
 
   // Stuff with functions
   // NOTE: This database is generated by first finding all classes (subclasses,
@@ -597,9 +599,8 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
       queryMap.set(command, id_start.id);
 
       id_start.id += 1;
-      name = "";
    }
-
+   name = "";
    fncSpecType = "";
 
    var allExpr = fnc.findall('.//expr');
@@ -631,8 +632,8 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
          queryMap.set(command, id_start.id);
 
          id_start.id += 1;
-         name = "";
        }
+       name = "";
      }
    }
 
@@ -661,8 +662,8 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
          queryMap.set(command, id_start.id);
 
          id_start.id += 1;
-         name = "";
        }
+       name = "";
      }
 
      // (2) Returns output from function call (expandable)
@@ -682,8 +683,8 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
          queryMap.set(command, id_start.id);
 
          id_start.id += 1;
-         name = "";
        }
+       name = "";
 
        var callName = retOutputFromFncCall.find('name');
        if (callName != null && callName.text != null){
@@ -707,8 +708,9 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
           queryMap.set(command, id_start.id);
 
           id_start.id += 1;
-          name = "";
+
         }
+         name = "";
        }
      }
    }
@@ -729,8 +731,8 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
        queryMap.set(command, id_start.id);
 
        id_start.id += 1;
-       name = "";
      }
+     name = "";
    }
    else{
 
@@ -778,15 +780,13 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
             command = command + " and src:parameter_list/src:parameter/src:decl[src:type['"
                         + fncTypes[m] +"']]";
           }
-          //console.log(name);
-          //console.log(command);
 
           attributeList.set(name, id_start.id);
           queryMap.set(command, id_start.id);
 
           id_start.id += 1;
-          name = "";
         }
+        name = "";
      }
 
    }
@@ -800,33 +800,34 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
      for (var n = 0; n < modifiesMemberVar.length; n++){
 
        var mod = modifiesMemberVar[n];
-       var name = mod.find('name/name');
+       var attrName = mod.find('name/name');
        var op = mod.find('operator');
        var call = mod.find('call/name/name');
 
        //console.log(call);
-       if (name != null && name.text == "this" && op != null && op.text == "="
+       if (attrName!= null && attrName.text == "this" && op != null && op.text == "="
            && call != null){
 
 
-         var attrName = "function of name \""
-                         + fncName.text
-                         + "\" modifies member variable of name \""
-                         + call.text + "\"";
+         name = "function of name \""
+                + fncName.text
+                + "\" modifies member variable of name \""
+                + call.text + "\"";
 
          // Check whether attribute has been seen globally
-         if(!attributeList.has(attrName)){
+         if(!attributeList.has(name)){
 
            // QUERY NOT YET FOUND
-           var command = "//src::stand in command for attribute " + attrName;
+           var command = "//src::stand in command for attribute " + name;
            // console.log(command);
 
-           attributeList.set(attrName, id_start.id);
+           attributeList.set(name, id_start.id);
            queryMap.set(command, id_start.id);
 
            id_start.id += 1;
 
          }
+         name = "";
        }
      }
    }
@@ -855,8 +856,8 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
           queryMap.set(command, id_start.id);
 
           id_start.id += 1;
-          name = "";
         }
+        name = "";
      }
      // (2) Returns type...
      else{
@@ -876,8 +877,8 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
          queryMap.set(command, id_start.id);
 
          id_start.id += 1;
-         name = "";
        }
+       name = "";
      }
    }
 
@@ -935,8 +936,8 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
           queryMap.set(command, id_start.id);
 
           id_start.id += 1;
-          name = "";
         }
+      name = "";
      }
    }
  }
@@ -954,16 +955,16 @@ exports.addClassAnnotations = function(subCL, attributes, allAttributes){
 
     for(var k = 0 ; k < clsAnnotCandidate.length; k++){
 
-      clsAnnot = clsAnnotCandidate[k];
+      var clsAnnot = clsAnnotCandidate[k];
       //console.log(clsAnnot);
       var annotArgs = clsAnnot.findall('.//argument/expr');
       //console.log(annotArgs);
-      var clsAnnotName = "class with annotation of \"@"
-                          + (clsAnnot.find('name').text)
-                          + "\"";
+      name = "class with annotation of \"@"
+              + (clsAnnot.find('name').text)
+              + "\"";
 
       if(annotArgs.length > 0){
-        clsAnnotName += " with \n";
+        name += " with \n";
         for(var q = 0; q < annotArgs.length; q++){
 
           var node = annotArgs[q];
@@ -973,29 +974,28 @@ exports.addClassAnnotations = function(subCL, attributes, allAttributes){
             var ch = (node._children)[u];
 
             if(ch.text != null){
-              clsAnnotName += ch.text;
+              name += ch.text;
             }
             else{
               for(var v = 0; v < (ch._children).length; v++){
                 var c = (ch._children)[v];
                 if(c.text != null){
-                  clsAnnotName += c.text;
+                  name += c.text;
                 }
               }
             }
 
           }
-          clsAnnotName += "\n";
+          name += "\n";
         }
         // Remove trailing newline
-        clsAnnotName = clsAnnotName.slice(0, -1);
+        name = name.slice(0, -1);
       }
 
-      if(!allAttributes.has(clsAnnotName)){
-
-        attributes.push(allAttributes.get(clsAnnotName));
-
+      if(!allAttributes.has(name)){
+        attributes.push(allAttributes.get(name));
       }
+      name = "";
     }
   }
 }
@@ -1021,9 +1021,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
         var name = "class with non-empty constructor";
 
         if(!allAttributes.has(name)){
-
           attributes.push(allAttributes.get(name));
-
         }
 
         name = "";
@@ -1073,9 +1071,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
           if(!allAttributes.has(name)){
             attributes.push(allAttributes.get(name));
           }
-
           name = "";
-
         }
 
         // Check for calls to constructor
@@ -1092,9 +1088,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
             if(!allAttributes.has(name)){
               attributes.push(allAttributes.get(name));
             }
-
             name = "";
-
           }
         }
       }
@@ -1169,9 +1163,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
           name = "";
         }
       }
-
     }
-
   }
   // If the class doesn't define a constructor, then we add that as an
   // attribute
@@ -1183,8 +1175,6 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
     }
     name = "";
   }
-
-
 }
 
 exports.addMemberVars = function(subCL, attributes, allAttributes){
@@ -1204,7 +1194,7 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
   // if only the member field without annotation version of the attribute
   // is frequently associated, then we know that that member field was
   // frequent but not the annotation itself.
-
+  var name;
   var declarations = subCL.findall('block/decl_stmt/decl');
   if (declarations != null){
 
@@ -1222,7 +1212,6 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
         }
         name = "";
       }
-
 
       // Generate feature for all member variable names with annotations
       var memberVarAnnotations = decl.findall('annotation');
@@ -1283,14 +1272,15 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
           if(memberVarType.text == null){
             memberVarType = memberVarType.find('name');
           }
-          memberVarTypeAttr = "class has member field of type \""
-                              + memberVarType.text + "\"";
+          name = "class has member field of type \""
+                  + memberVarType.text + "\"";
 
           // Check whether this attribute has been seen globally
           // Check if this attribute has been seen globally
-          if(allAttributes.has(memberVarTypeAttr)){
-            attributes.push(allAttributes.get(memberVarTypeAttr));
+          if(allAttributes.has(name)){
+            attributes.push(allAttributes.get(name));
           }
+          name = "";
 
           // Generate feature for all member variable names with types
           if(memberVarName.text != null && memberVarType.text != null){
@@ -1298,15 +1288,15 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
             if(memberVarType.text == ""){
               memberVarType = memberVarType.find('name');
             }
-             var memberVarNameAndType = "class has member field of name \""
-                                         + memberVarName.text
-                                         + "\" of type \""
-                                         + memberVarType.text + "\"";
+             name = "class has member field of name \""
+                     + memberVarName.text
+                     + "\" of type \""
+                     + memberVarType.text + "\"";
               // Check whether attribute has been seen globally
-              if(allAttributes.has(memberVarNameAndType)){
-
-                attributes.push(allAttributes.get(memberVarNameAndType));
+              if(allAttributes.has(name)){
+                attributes.push(allAttributes.get(name));
               }
+              name = "";
           }
         }
       }
@@ -1320,13 +1310,12 @@ exports.addImplementations = function(subCL, attributes, allAttributes){
   // What a class implements
   var classImplements = subCL.find('super/implements');
   if (classImplements != null){
-    name = "class with implementation of \""
+    var name = "class with implementation of \""
            + (classImplements.find('name')).text + "\"";
 
      if(allAttributes.has(name)){
        attributes.push(allAttributes.get(name));
      }
-     name = "";
   }
 }
 
@@ -1554,23 +1543,23 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
      for (var n = 0; n < modifiesMemberVar.length; n++){
 
        var mod = modifiesMemberVar[n];
-       var name = mod.find('name/name');
+       var attrName = mod.find('name/name');
        var op = mod.find('operator');
        var call = mod.find('call/name/name');
 
        //console.log(call);
-       if (name != null && name.text == "this" && op != null && op.text == "="
+       if (attrName != null && attrName.text == "this" && op != null && op.text == "="
            && call != null){
 
+         name = "function of name \""
+                + fncName.text
+                + "\" modifies member variable of name \""
+                + call.text + "\"";
 
-         var attrName = "function of name \""
-                         + fncName.text
-                         + "\" modifies member variable of name \""
-                         + call.text + "\"";
-
-         if(allAttributes.has(attrName)){
-           attributes.push(allAttributes.get(attrName));
+         if(allAttributes.has(name)){
+           attributes.push(allAttributes.get(name));
          }
+         name = "";
        }
      }
    }
