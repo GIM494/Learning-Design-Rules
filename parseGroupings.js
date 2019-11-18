@@ -12,7 +12,6 @@ corresponding attribute desciprtions for each one.*/
 // Each of the FI sets - All begin with AE_crowdCode
 
 const fs = require('fs');
-const readline = require('readline');
 var path = require("path");
 
 // Path to directory with xml files we wish to iterate through
@@ -65,6 +64,7 @@ for(var i = 0; i < fileList.length; i++){
 }
 
 // Now we are ready to create our modified output text files
+var stream;
 for (var i = 0; i < fileList.length; i++){
 
   var contents = fs.readFileSync(fileList[i]);
