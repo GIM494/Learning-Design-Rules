@@ -88,8 +88,7 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
         // Check if attribute has been seen globally
         if(!attributeList.has(name)){
 
-          // QUERY NOT YET FOUND
-          var command = "//src::stand in command for attribute " + name;
+          var command = "//src:class[count(src:block/src:constructor/src:block/*)>0]";
           //console.log(command);
 
           attributeList.set(name, id_start.id);
@@ -177,7 +176,11 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
             if(!attributeList.has(name)){
 
               // QUERY NOT YET KNOWN
-              var command = "//src::stand in command for attribute " + name;
+              var command = "//src:constructor[src:block/src:expr_stmt/src:expr/"
+                            + "src:call/src:name/text()=\"" + call.text
+                            + "\" or "
+                            + "src:block/src:decl_stmt/src:decl/scr:init/src:expr"
+                            + "/src:call/src:name/text()=\"" + call.text + "\"]";
               // console.log(command);
 
               attributeList.set(name, id_start.id);
@@ -197,8 +200,7 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
 
-          // QUERY NOT YET KNOWN
-          var command = "//src::stand in command for attribute " + name;
+          var command = "//src:class[count(src:block/src:constructor/src:block/*)=0]";
           // console.log(command);
 
           attributeList.set(name, id_start.id);
@@ -279,8 +281,12 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
           // Check if this attribute has been seen globally
           if(!attributeList.has(name)){
 
-            // QUERY NOT FOUND YET
-            var command = "//src::stand in command for attribute " + name;
+            // logic: class[count(argument in statements) = count(arguments)]
+            var command = "//src:class[count(src:block/src:constructor/src:parameter_list/src:parameter/"
+                          + "src:decl/src:name[text()=ancestor::src:constructor/src:block//src:expr_stmt/"
+                          + "src:expr[src:name[1]/src:name/text()=\"this\" and src:operator/text()=\"=\"]/"
+                          + "src:name[2]/text()])=count(src:block/src:constructor/src:parameter_list/"
+                          + "src:parameter)]";
             // console.log(command);
 
             attributeList.set(name, id_start.id);
@@ -301,7 +307,7 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
     if(!attributeList.has(name)){
 
       // QUERY NOT YET KNOWN
-      var command = "//src::stand in command for attribute " + name;
+      var command = "//src:class[count(src:block/src:constructor)=0]";
       // console.log(command);
 
       attributeList.set(name, id_start.id);
@@ -344,7 +350,7 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
         if(!attributeList.has(name)){
 
           var command = "src:class[src:block/src:decl_stmt/src:decl/src:name[text()=\""
-                        + memberVarName.text + "\"] ";
+                        + memberVarName.text + "\"]";
           //console.log(command);
 
           attributeList.set(name, id_start.id);
@@ -625,8 +631,11 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
 
-         // QUERY NOT FOUND YET
-         var command = "//src::stand in command for attribute " + name;
+         var command = "//src:function[src:name/text()=\"" + fncName.text
+                       + "\" and (src:block/src:expr_stmt/src:expr/src:call"
+                       + "/src:name/text()=\"" + call.text +
+                       + "\" or src:block/src:decl_stmt/src:decl/src:init/"
+                       + "src:expr/src:call/src:name/text()=\"" + call.text + "\")]";
          // console.log(command);
 
          attributeList.set(name, id_start.id);
@@ -646,18 +655,27 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
 
      // (1) Calls constructor (expandable)
      var constructorCall = fncReturnInfo.find('operator');
-     if (constructorCall != null && constructorCall.text == "new"){
+     var call = constructorCall.find('call/name');
+     if (constructorCall != null && constructorCall.text == "new"
+        && call!=null && call.text!=null){
+
+      if(call.text == ""){
+        call = call.find('name');
+      }
 
        name = "function of name \""
                + fncName.text
-               + "\" must call constructor in return statement";
+               + "\" must call constructor of class " + call.text
+               + " in return statement";
 
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
 
          // QUERY NOT FOUND YET
-         var command = "//src::stand in command for attribute " + name;
-         // console.log(command);
+         var command = "//src:function[src:name/text()=\"" + fncName.text
+                      +"\" and src:block//src:return/src:expr/src:call//"
+                      + "src:name/text()=\"" + call.text +"\"]";
+         console.log(command);
 
          attributeList.set(name, id_start.id);
          queryMap.set(command, id_start.id);
@@ -669,16 +687,25 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
 
      // (2) Returns output from function call (expandable)
      var retOutputFromFncCall = fncReturnInfo.find('call');
+     var call = retOutputFromFncCall.find('call/name');
      if (retOutputFromFncCall != null){
+
+       if(call.text == ""){
+         call = call.find('name');
+       }
+
        name = "function of name \"" + fncName.text
-               + "\" must return output from function";
+               + "\" must return output from function of name \""
+               + call.text + "\"";
 
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
 
          // QUERY NOT FOUND YET
-         var command = "//src::stand in command for attribute " + name;
-         // console.log(command);
+         var command =  "//src:function[src:name/text()=\"" + fncName.text
+                      +"\" and src:block//src:return/src:expr/src:call//"
+                      + "src:name/[text()=\"" + call.text +"\"]]";
+         //console.log(command);
 
          attributeList.set(name, id_start.id);
          queryMap.set(command, id_start.id);
@@ -701,8 +728,9 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
         // Check whether attribute has been seen globally
         if(!attributeList.has(name)){
 
-          // QUERY NOT FOUND YET
-          var command = "//src::stand in command for attribute " + name;
+          var command = "//src:function[src:name/text()=\"" + fncName.text
+                        + "\" and src:block//src:return/src:expr/src:call//"
+                        + "src:name/text()=\"" + callName.text + "\"]";
           // console.log(command);
 
           attributeList.set(name, id_start.id);
@@ -724,8 +752,8 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
      // Check whether attribute has been seen globally
      if(!attributeList.has(name)){
 
-       // QUERY NOT FOUND YET
-       var command = "//src::stand in command for attribute " + name;
+       var command = "//src:function[count(src:parameter_list/src:parameter)=0 and src:name/text()=\""
+                      + fncName.text + "\"]";
        // console.log(command);
 
        attributeList.set(name, id_start.id);
@@ -809,7 +837,6 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
        if (attrName!= null && attrName.text == "this" && op != null && op.text == "="
            && call != null){
 
-
          name = "function of name \""
                 + fncName.text
                 + "\" modifies member variable of name \""
@@ -819,7 +846,10 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
          if(!attributeList.has(name)){
 
            // QUERY NOT YET FOUND
-           var command = "//src::stand in command for attribute " + name;
+           var command = "//src:function[src:name/text()=\"" + fncName.text
+                         + "\" and src:block//src:expr_stmt/src:expr[src:name[1]"
+                         + "/src:name[1]=\"this\" and src:name[1]/src:name[2]=\""
+                         + call.text +"\" and src:operator/text()=\"=\"]]";
            // console.log(command);
 
            attributeList.set(name, id_start.id);

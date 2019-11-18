@@ -8,8 +8,6 @@ var ElementTree = et.ElementTree;
 var element = et.Element;
 var subElement = et.SubElement;
 
-
-
 exports.outputMetaData = function(allAttributes, outputFile, queryMap){
 
     var entries = Array.from(allAttributes.entries());
@@ -209,7 +207,7 @@ exports.addParentChildRelations = function(id_start, classGroupings, attributeLi
               if(!attributeList.has(name)){
 
                 // QUERY NOT YET KNOWN
-                var command = "stand in command for attribute " + name;
+                //var command = "//src:function[src:annotation/src:name/text()=\"Override\" and src:name/text()=\"storeToFirebase\"]";
                 //console.log(command);
 
                 attributeList.set(name, id_start.id);
