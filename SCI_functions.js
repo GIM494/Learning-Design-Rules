@@ -69,7 +69,7 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
   // Choose last constructor because sometimes a default is defined and
   // then re-defined by another constructor (see Microtask.java)
   var constructor = subCL.findall('block/constructor');
-  var name;
+  let name;
 
   if(constructor.length > 0){
     for(var q = 0; q < constructor.length; q++){
@@ -328,7 +328,7 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
   // if only the member field without annotation version of the attribute
   // is frequently associated, then we know that that member field was
   // frequent but not the annotation itself.
-  var name;
+  let name;
   var declarations = subCL.findall('block/decl_stmt/decl');
   if (declarations != null){
 
@@ -473,6 +473,7 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
 exports.findImplements = function(subCL, attributeList, id_start, queryMap){
 
   // What a class implements
+  let name;
   var classImplements = subCL.find('super/implements');
   if (classImplements != null){
     name = "class with implementation of \""
@@ -496,7 +497,7 @@ exports.findImplements = function(subCL, attributeList, id_start, queryMap){
 
 exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
   // Attribute name
-  var name = "";
+  let name = "";
 
   // Class visibility specifier
   var clsSpecificity = subCL.find('specifier');
@@ -950,6 +951,7 @@ exports.addClassAnnotations = function(subCL, attributes, allAttributes){
   // Now we look for other attributes in the class
   //if(childName == "CrowdServlet" ) {console.log(childName);}
   // First we will output all the annotations on a class
+  let name;
   var clsAnnotCandidate = subCL.findall('annotation');
   if (clsAnnotCandidate.length > 0){
 
@@ -1002,6 +1004,7 @@ exports.addClassAnnotations = function(subCL, attributes, allAttributes){
 
 exports.addConstructors = function(subCL, attributes, allAttributes){
 
+  let name;
   // Choose last constructor because sometimes a default is defined and
   // then re-defined by another constructor (see Microtask.java)
   var constructor = subCL.findall('block/constructor');
@@ -1018,7 +1021,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
       var constrBodyList = constructorBody.find(".*");
       if(constrBodyList != undefined){
 
-        var name = "class with non-empty constructor";
+        name = "class with non-empty constructor";
 
         if(!allAttributes.has(name)){
           attributes.push(allAttributes.get(name));
@@ -1194,7 +1197,7 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
   // if only the member field without annotation version of the attribute
   // is frequently associated, then we know that that member field was
   // frequent but not the annotation itself.
-  var name;
+  let name;
   var declarations = subCL.findall('block/decl_stmt/decl');
   if (declarations != null){
 
@@ -1310,7 +1313,7 @@ exports.addImplementations = function(subCL, attributes, allAttributes){
   // What a class implements
   var classImplements = subCL.find('super/implements');
   if (classImplements != null){
-    var name = "class with implementation of \""
+    let name = "class with implementation of \""
            + (classImplements.find('name')).text + "\"";
 
      if(allAttributes.has(name)){
@@ -1321,6 +1324,7 @@ exports.addImplementations = function(subCL, attributes, allAttributes){
 
 exports.addClsFunctions = function(subCL, attributes, allAttributes){
 
+  let name;
   // Class visibility specifier
   var clsSpecificity = subCL.find('specifier');
   // If the class does not have an explicit visitbilit specifier
