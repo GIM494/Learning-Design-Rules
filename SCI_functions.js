@@ -49,7 +49,6 @@ exports.findClassAnnotations = function(subCL, attributeList, id_start, queryMap
 
       if(!attributeList.has(clsAnnotName)){
 
-        // QUERY NOT YET FOUND
         var command = "//src::stand in command for attribute " + clsAnnotName;
         // console.log(command);
 
@@ -175,7 +174,6 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
 
             if(!attributeList.has(name)){
 
-              // QUERY NOT YET KNOWN
               var command = "//src:constructor[src:block/src:expr_stmt/src:expr/"
                             + "src:call/src:name/text()=\"" + call.text
                             + "\" or "
@@ -306,7 +304,6 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
     // Check if this attribute has been seen globally
     if(!attributeList.has(name)){
 
-      // QUERY NOT YET KNOWN
       var command = "//src:class[count(src:block/src:constructor)=0]";
       // console.log(command);
 
@@ -408,7 +405,6 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
           // Check if this attribute has been seen globally
           if(!attributeList.has(memberVarAnnotAttr)){
 
-            // QUERY NOT FOUND YET
             var command = "//src::stand in command for attribute " + memberVarAnnotAttr;
             // console.log(command);
 
@@ -671,7 +667,6 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
 
-         // QUERY NOT FOUND YET
          var command = "//src:function[src:name/text()=\"" + fncName.text
                       +"\" and src:block//src:return/src:expr/src:call//"
                       + "src:name/text()=\"" + call.text +"\"]";
@@ -701,7 +696,6 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
 
-         // QUERY NOT FOUND YET
          var command =  "//src:function[src:name/text()=\"" + fncName.text
                       +"\" and src:block//src:return/src:expr/src:call//"
                       + "src:name/[text()=\"" + call.text +"\"]]";
@@ -845,7 +839,6 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
          // Check whether attribute has been seen globally
          if(!attributeList.has(name)){
 
-           // QUERY NOT YET FOUND
            var command = "//src:function[src:name/text()=\"" + fncName.text
                          + "\" and src:block//src:expr_stmt/src:expr[src:name[1]"
                          + "/src:name[1]=\"this\" and src:name[1]/src:name[2]=\""
@@ -959,7 +952,6 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
 
-          // QUERY NOT YET FOUND
           var command = "//src::stand in command for attribute " + name;
           // console.log(command);
 
