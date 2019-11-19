@@ -682,7 +682,7 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
 
      // (2) Returns output from function call (expandable)
      var retOutputFromFncCall = fncReturnInfo.find('call');
-     var call = retOutputFromFncCall.find('call/name');
+     call = retOutputFromFncCall.find('call/name');
      if (retOutputFromFncCall != null){
 
        if(call.text == ""){
@@ -797,7 +797,7 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
         if(!attributeList.has(name)){
 
           // Make the query/command
-          command = "src:class[src:block/src:function[(src:name[text()=\""
+          var command = "src:class[src:block/src:function[(src:name[text()=\""
                     + fncName.text + "\"]";
           for (var m = 0; m < fncTypes.length; m++){
             command = command + " and src:parameter_list/src:parameter/src:decl[src:type['"
@@ -952,6 +952,7 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
 
+          // QUERY NOT YET FOUND
           var command = "//src::stand in command for attribute " + name;
           // console.log(command);
 

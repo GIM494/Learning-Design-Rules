@@ -206,8 +206,9 @@ exports.addParentChildRelations = function(id_start, classGroupings, attributeLi
               // Check if this attribute has been seen globally
               if(!attributeList.has(name)){
 
-                // QUERY NOT YET KNOWN
-                //var command = "//src:function[src:annotation/src:name/text()=\"Override\" and src:name/text()=\"storeToFirebase\"]";
+                var command = "//src:function[src:annotation/src:name/text()=\"Override\""
+                              + "and src:name/text()=\"" + matchingFunctions[m]
+                              + "\"]";
                 //console.log(command);
 
                 attributeList.set(name, id_start.id);
