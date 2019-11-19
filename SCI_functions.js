@@ -15,6 +15,9 @@ exports.findClassAnnotations = function(subCL, attributeList, id_start, queryMap
                           + (clsAnnot.find('name').text)
                           + "\"";
 
+      var command = "//src:class[src:annotation[src:name/text()=\""
+                    + (clsAnnot.find('name').text) +"\"]]";
+
       if(annotArgs.length > 0){
         clsAnnotName += " with \n";
         for(var q = 0; q < annotArgs.length; q++){
@@ -24,6 +27,7 @@ exports.findClassAnnotations = function(subCL, attributeList, id_start, queryMap
           for(var u = 0; u < (node._children).length; u++){
 
             var ch = (node._children)[u];
+            //console.log(ch.text);
 
             if(ch.text != null){
               clsAnnotName += ch.text;
@@ -33,6 +37,7 @@ exports.findClassAnnotations = function(subCL, attributeList, id_start, queryMap
                 var c = (ch._children)[v];
                 if(c.text != null){
                   clsAnnotName += c.text;
+                  //console.log(c.text);
                 }
               }
             }
@@ -47,9 +52,11 @@ exports.findClassAnnotations = function(subCL, attributeList, id_start, queryMap
         //console.log(clsAnnotName);
       }
 
+      command = command + "]]";
+
       if(!attributeList.has(clsAnnotName)){
 
-        var command = "//src::stand in command for attribute " + clsAnnotName;
+        //var command = "//src::stand in command for attribute " + clsAnnotName;
         // console.log(command);
 
         attributeList.set(clsAnnotName, id_start.id);
@@ -651,89 +658,100 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
 
      // (1) Calls constructor (expandable)
      var constructorCall = fncReturnInfo.find('operator');
-     var call = constructorCall.find('call/name');
-     if (constructorCall != null && constructorCall.text == "new"
-        && call!=null && call.text!=null){
 
-      if(call.text == ""){
-        call = call.find('name');
+     if (constructorCall != null && constructorCall.text == "new"){
+
+      var call = constructorCall.find('call/name');
+
+      if(call!=null && call.text!=null){
+
+        if(call.text == ""){
+          call = call.find('name');
+        }
+
+         name = "function of name \""
+                 + fncName.text
+                 + "\" must call constructor of class " + call.text
+                 + " in return statement";
+
+         // Check whether attribute has been seen globally
+         if(!attributeList.has(name)){
+
+           var command = "//src:function[src:name/text()=\"" + fncName.text
+                        +"\" and src:block//src:return/src:expr/src:call//"
+                        + "src:name/text()=\"" + call.text +"\"]";
+           console.log(command);
+
+           attributeList.set(name, id_start.id);
+           queryMap.set(command, id_start.id);
+
+           id_start.id += 1;
+         }
+         name = "";
+
       }
 
-       name = "function of name \""
-               + fncName.text
-               + "\" must call constructor of class " + call.text
-               + " in return statement";
 
-       // Check whether attribute has been seen globally
-       if(!attributeList.has(name)){
-
-         var command = "//src:function[src:name/text()=\"" + fncName.text
-                      +"\" and src:block//src:return/src:expr/src:call//"
-                      + "src:name/text()=\"" + call.text +"\"]";
-         console.log(command);
-
-         attributeList.set(name, id_start.id);
-         queryMap.set(command, id_start.id);
-
-         id_start.id += 1;
-       }
-       name = "";
      }
 
      // (2) Returns output from function call (expandable)
      var retOutputFromFncCall = fncReturnInfo.find('call');
-     call = retOutputFromFncCall.find('call/name');
+
      if (retOutputFromFncCall != null){
 
-       if(call.text == ""){
-         call = call.find('name');
-       }
+       call = retOutputFromFncCall.find('call/name');
 
-       name = "function of name \"" + fncName.text
-               + "\" must return output from function of name \""
-               + call.text + "\"";
-
-       // Check whether attribute has been seen globally
-       if(!attributeList.has(name)){
-
-         var command =  "//src:function[src:name/text()=\"" + fncName.text
-                      +"\" and src:block//src:return/src:expr/src:call//"
-                      + "src:name/[text()=\"" + call.text +"\"]]";
-         //console.log(command);
-
-         attributeList.set(name, id_start.id);
-         queryMap.set(command, id_start.id);
-
-         id_start.id += 1;
-       }
-       name = "";
-
-       var callName = retOutputFromFncCall.find('name');
-       if (callName != null && callName.text != null){
-
-         if(callName.text == ""){
-           callName = callName.find('name');
+       if(call!=null && call.text!=null){
+         if(call.text == ""){
+           call = call.find('name');
          }
 
          name = "function of name \"" + fncName.text
-                + "must return output from function of name \""
-                + callName.text + "\"";
+                 + "\" must return output from function of name \""
+                 + call.text + "\"";
 
-        // Check whether attribute has been seen globally
-        if(!attributeList.has(name)){
+         // Check whether attribute has been seen globally
+         if(!attributeList.has(name)){
 
-          var command = "//src:function[src:name/text()=\"" + fncName.text
-                        + "\" and src:block//src:return/src:expr/src:call//"
-                        + "src:name/text()=\"" + callName.text + "\"]";
-          // console.log(command);
+           var command =  "//src:function[src:name/text()=\"" + fncName.text
+                        +"\" and src:block//src:return/src:expr/src:call//"
+                        + "src:name/[text()=\"" + call.text +"\"]]";
+           //console.log(command);
 
-          attributeList.set(name, id_start.id);
-          queryMap.set(command, id_start.id);
+           attributeList.set(name, id_start.id);
+           queryMap.set(command, id_start.id);
 
-          id_start.id += 1;
-
-        }
+           id_start.id += 1;
+         }
          name = "";
+
+         var callName = retOutputFromFncCall.find('name');
+         if (callName != null && callName.text != null){
+
+           if(callName.text == ""){
+             callName = callName.find('name');
+           }
+
+           name = "function of name \"" + fncName.text
+                  + "must return output from function of name \""
+                  + callName.text + "\"";
+
+          // Check whether attribute has been seen globally
+          if(!attributeList.has(name)){
+
+            var command = "//src:function[src:name/text()=\"" + fncName.text
+                          + "\" and src:block//src:return/src:expr/src:call//"
+                          + "src:name/text()=\"" + callName.text + "\"]";
+            // console.log(command);
+
+            attributeList.set(name, id_start.id);
+            queryMap.set(command, id_start.id);
+
+            id_start.id += 1;
+
+          }
+           name = "";
+         }
        }
      }
    }
