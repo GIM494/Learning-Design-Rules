@@ -181,11 +181,17 @@ for (const group of groupList.keys()) {
 var outputFile = "attributeMETAdata_crowdCode.txt";
 sci.outputMetaData(allAttributes, outputFile, queryMap);
 
-
+var dataMap = new Map();
 for (const group of groupList.keys()){
   var grouping = groupList.get(group);
   sci.findParentChildRelations(allAttributes, grouping, analysisFileName,
-                               classLocations, parentInfo, fileAnalysisMap);
+                               classLocations, parentInfo, fileAnalysisMap, dataMap);
 }
+
+// This variable is an array of all of our databases in the format:
+//[ ["nameOfFile.txt", "data that is going to be written into file"],
+// ["nextFile.txt", "some other data"]]
+var databases = Array.from(dataMap.entries());
+//console.log(databases);
 
 sci.outputFileAnalysisData(fileAnalysisMap);

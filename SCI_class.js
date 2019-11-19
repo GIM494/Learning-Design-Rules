@@ -249,19 +249,21 @@ exports.addParentChildRelations = function(id_start, classGroupings, attributeLi
 
 exports.findParentChildRelations = function(allAttributes, classGroupings,
                                             analysisFileName, classLocations,
-                                            parentInfo, fileAnalysisMap){
+                                            parentInfo, fileAnalysisMap, dataMap){
 
   var parentClass = classGroupings[classGroupings.length-1];
   var subCLfncs = [];
   var classTree;
 
   // Empty the analysisFile first in case anything has been written before
+  /*
   fileN = analysisFileName + "_subClassOf" + parentClass + ".txt";
   var d = "";
   fs.writeFile(fileN, d, (err) => {
   // In case of a error throw err.
   if (err) throw err;
   });
+  */
 
   // Used to keep track of all the files we have accessed
   var listOfFiles = [];
@@ -404,15 +406,25 @@ exports.findParentChildRelations = function(allAttributes, classGroupings,
 
           var data = finalList.join(" ") + "\n";
 
+          // Place the data in the map...
+          // If we already have an entry for this database, then we just
+          // append the new information
+          if (dataMap.has(fileN)){
+             var entry = dataMap.get(fileN);
+             entry = entry + data;
+             dataMap.set(fileN, entry);
+           }
+           // However, if we haven't yet had any entries for this database,
+           // then we just set this data as the first entry
+           else{
+             dataMap.set(fileN, data);
+           }
+
+           /*
           var stream = fs.createWriteStream(fileN, {flags:'a'});
           stream.write(data);
           stream.end();
-          /*
-          fs.appendFile(fileN, data, (err) => {
-          // In case of a error throw err.
-          if (err) throw err;
-        });*/
-
+          */
         }
 
         attributes.length = 0;
