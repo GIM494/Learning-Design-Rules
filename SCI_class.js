@@ -114,8 +114,7 @@ exports.addChildren = function(parent, childParent, groupID, currDepth, groupLis
   return parent;
 }
 
-
-exports.addParentChildRelations = function(id_start, classGroupings, attributeList, classLocations, parentInfo, queryMap){
+exports.findParentChildRelations = function(id_start, classGroupings, attributeList, classLocations, parentInfo, queryMap){
 
   var parentClass = classGroupings[classGroupings.length-1];
   var subCLfncs = [];
@@ -246,8 +245,7 @@ exports.addParentChildRelations = function(id_start, classGroupings, attributeLi
 
 }
 
-
-exports.findParentChildRelations = function(allAttributes, classGroupings,
+exports.addParentChildRelations = function(allAttributes, classGroupings,
                                             analysisFileName, classLocations,
                                             parentInfo, fileAnalysisMap, dataMap){
 

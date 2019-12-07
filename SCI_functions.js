@@ -285,7 +285,7 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
           name = "class with constructor that stores all parameters as member variables";
           // Check if this attribute has been seen globally
           if(!attributeList.has(name)){
-
+            //console.log(name);
             // logic: class[count(argument in statements) = count(arguments)]
             var command = "//src:class[count(src:block/src:constructor/src:parameter_list/src:parameter/"
                           + "src:decl/src:name[text()=ancestor::src:constructor/src:block//src:expr_stmt/"
@@ -1035,7 +1035,7 @@ exports.addClassAnnotations = function(subCL, attributes, allAttributes){
         name = name.slice(0, -1);
       }
 
-      if(!allAttributes.has(name)){
+      if(allAttributes.has(name)){
         attributes.push(allAttributes.get(name));
       }
       name = "";
@@ -1064,7 +1064,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
 
         name = "class with non-empty constructor";
 
-        if(!allAttributes.has(name)){
+        if(allAttributes.has(name)){
           attributes.push(allAttributes.get(name));
         }
 
@@ -1112,7 +1112,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
           name = "constructor must set " + memVarSet.join(" and ");
 
           // Check if attribute has been seen globally
-          if(!allAttributes.has(name)){
+          if(allAttributes.has(name)){
             attributes.push(allAttributes.get(name));
           }
           name = "";
@@ -1129,7 +1129,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
           if ((op != null) && (op.text == "new") && (call != null) && (call.text != null)){
             name = "constructor must call constructor of class \"" + call.text + "\" ";
 
-            if(!allAttributes.has(name)){
+            if(allAttributes.has(name)){
               attributes.push(allAttributes.get(name));
             }
             name = "";
@@ -1142,7 +1142,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
         name = "class has empty-body constructor";
 
         // Check if this attribute has been seen globally
-        if(!allAttributes.has(name)){
+        if(allAttributes.has(name)){
           attributes.push(allAttributes.get(name));
         }
         name = "";
@@ -1191,7 +1191,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
       if(allParamTypes != ""){
         name = "class with constructor with parameters of type " + allParamTypes;
         // Check if this attribute has been seen globally
-        if(!allAttributes.has(name)){
+        if(allAttributes.has(name)){
           attributes.push(allAttributes.get(name));
         }
         name = "";
@@ -1201,7 +1201,8 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
         if(allParamsStored == true){
           name = "class with constructor that stores all parameters as member variables";
           // Check if this attribute has been seen globally
-          if(!allAttributes.has(name)){
+          if(allAttributes.has(name)){
+            //console.log(name);
             attributes.push(allAttributes.get(name));
           }
           name = "";
@@ -1214,7 +1215,7 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
   else{
     name = "class does not define constructor";
     // Check if this attribute has been seen globally
-    if(!allAttributes.has(name)){
+    if(allAttributes.has(name)){
       attributes.push(allAttributes.get(name));
     }
     name = "";
@@ -1251,7 +1252,7 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
 
         name = "class has member field with name \"" + memberVarName.text + "\"";
         // Check if this attribute has been seen globally
-        if(!allAttributes.has(name)){
+        if(allAttributes.has(name)){
           attributes.push(allAttributes.get(name));
         }
         name = "";

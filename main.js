@@ -167,7 +167,7 @@ var id_start = {id : 0};
 for (const group of groupList.keys()) {
 
   var merged = new Map(allAttributes,
-                       sci.addParentChildRelations(id_start, groupList.get(group),
+                       sci.findParentChildRelations(id_start, groupList.get(group),
                        allAttributes, classLocations, parentInfo, queryMap));
   allAttributes = merged;
 
@@ -184,7 +184,7 @@ sci.outputMetaData(allAttributes, outputFile, queryMap);
 var dataMap = new Map();
 for (const group of groupList.keys()){
   var grouping = groupList.get(group);
-  sci.findParentChildRelations(allAttributes, grouping, analysisFileName,
+  sci.addParentChildRelations(allAttributes, grouping, analysisFileName,
                                classLocations, parentInfo, fileAnalysisMap, dataMap);
 }
 
@@ -192,6 +192,6 @@ for (const group of groupList.keys()){
 //[ ["nameOfFile.txt", "data that is going to be written into file"],
 // ["nextFile.txt", "some other data"]]
 var databases = Array.from(dataMap.entries());
-//console.log(databases);
+console.log((dataMap.keys()));
 
 sci.outputFileAnalysisData(fileAnalysisMap);
