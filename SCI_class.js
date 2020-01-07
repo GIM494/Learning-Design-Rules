@@ -114,6 +114,116 @@ exports.addChildren = function(parent, childParent, groupID, currDepth, groupLis
   return parent;
 }
 
+// Note: the xPath queries provided in customQueries double as the
+// attribute description and command
+exports.findCustomRelations = function(id_start, customQueries, attributeList, queryMap){
+
+  for (var i = 0; i < customQueries.length; i++){
+
+    if(!attributeList.has(customQueries[i])){
+
+      attributeList.set(customQueries[i], id_start.id);
+      queryMap.set(customQueries[i], id_start.id);
+
+      id_start.id += 1;
+    }
+  }
+}
+
+exports.addCustomRelations = function(allAttributes, customQueries, classGroupings,
+                                            analysisFileName, classLocations,
+                                            parentInfo, fileAnalysisMap, dataMap){
+
+  var parentClass = classGroupings[classGroupings.length-1];
+  var classTree;
+
+  // Used to keep track of the children classes about which we've already
+  // collected data
+  var classesVisited = [];
+
+  var index = 0;
+
+  for(var i = 0; i < classGroupings.length; i++){
+
+    var f = classLocations[classGroupings[i]];
+
+    if(f != undefined){
+      f = f.split("\\")[(f.split("\\")).length - 1]
+      f = f.split(".")[0] + ".xml";
+
+      var data = fs.readFileSync(f).toString();
+      classTree = et.parse(data);
+
+    }
+    else{
+      continue;
+    }
+
+
+    var subCL = classTree.findall('.//class');
+
+
+    var childName;
+    for(var j = 0; j < subCL.length; j++){
+
+      // Figure out what the child class's name is
+      var chName = subCL[j].find('name');
+
+      if(chName == null){
+        continue;
+      }
+
+      if(chName.text == null){
+        childName = (chName.find('name')).text
+      }
+      else{
+        childName = chName.text;
+      }
+      // If we can't find a name, then we go on to the next class in
+      // the srcML file
+      if(childName == ''){
+        continue;
+      }
+
+      // Each xml file might contain multiple classes, so just because a class
+      // is in the file, doesn't mean that it is the one that we want, so
+      // we need to check that the filename is in classGroupings
+      if(classGroupings.includes(childName) && !classesVisited.includes(childName)){
+        classesVisited.push(childName);
+
+        // Get the list of attributes for this class
+        let fileN = analysisFileName + "_subClassOf" + parentClass + ".txt";
+        var entry = (dataMap.get(fileN));
+
+        // Go through each of the customQueries. If the customQuery is present
+        // in this class, then add its attribute id to the list of attributes
+        // for the class
+        for (var k = 0; k < customQueries.length; k++){
+          let query = subCL[j].findall(customQueries[k]);
+
+          // If we found this customQuery, then we add it to the list of
+          // attribute for this class
+          if(query != null && index < entry.length){
+
+            if(allAttributes.has(customQueries[k]) &&
+                 !entry[index].includes(allAttributes.get(customQueries[k]))){
+
+                 entry[index].push(allAttributes.get(customQueries[k]));
+                 dataMap.set(fileN, entry);
+                 entry = dataMap.get(fileN);
+
+               }
+             }
+          }
+          // Increment index into set of entries for this database
+          index++;
+        }
+
+      }
+    }
+  //console.log(newMap);
+}
+
 exports.findParentChildRelations = function(id_start, classGroupings, attributeList, classLocations, parentInfo, queryMap){
 
   var parentClass = classGroupings[classGroupings.length-1];
@@ -250,6 +360,10 @@ exports.addParentChildRelations = function(allAttributes, classGroupings,
                                             parentInfo, fileAnalysisMap, dataMap){
 
   var parentClass = classGroupings[classGroupings.length-1];
+  // This array is to keep track of what functions are overridden in
+  // the child class; we assume they are overridden, but once we
+  // find a class that doesn't override a parent function we set that
+  // element to False
   var subCLfncs = [];
   var classTree;
 
@@ -266,10 +380,9 @@ exports.addParentChildRelations = function(allAttributes, classGroupings,
   // Used to keep track of all the files we have accessed
   var listOfFiles = [];
 
-  // This array is to keep track of what functions are overridden in
-  // the child class; we assume they are overridden, but once we
-  // find a class that doesn't override a parent function we set that
-  // element to False
+  // Used to keep track of the children classes about which we've already
+  // collected data
+  var classesVisited = [];
 
   for(var i = 0; i < classGroupings.length; i++){
 
@@ -313,7 +426,9 @@ exports.addParentChildRelations = function(allAttributes, classGroupings,
       // Each xml file might contain multiple classes, so just because setInterval(function () {
       // is in the file, doesn't mean that it is the one that we want, so
       // we need to check that the filename is in classGroupings
-      if(classGroupings.includes(childName)){
+      if(classGroupings.includes(childName) && !classesVisited.includes(childName)){
+        classesVisited.push(childName);
+        //console.log(childName);
 
         if(parentInfo.get(parentClass) != undefined){
 
@@ -402,20 +517,24 @@ exports.addParentChildRelations = function(allAttributes, classGroupings,
 
           //console.log(finalList);
 
-          var data = finalList.join(" ") + "\n";
+          // var data = finalList.join(" ") + "\n";
 
           // Place the data in the map...
           // If we already have an entry for this database, then we just
           // append the new information
           if (dataMap.has(fileN)){
              var entry = dataMap.get(fileN);
-             entry = entry + data;
+
+             entry.push(finalList);
              dataMap.set(fileN, entry);
            }
            // However, if we haven't yet had any entries for this database,
            // then we just set this data as the first entry
            else{
-             dataMap.set(fileN, data);
+
+             var entry  = new Array();
+             entry[0] = finalList;
+             dataMap.set(fileN, entry);
            }
 
            /*
@@ -447,7 +566,6 @@ exports.addParentChildRelations = function(allAttributes, classGroupings,
 exports.outputFileAnalysisData = function(fileAnalysisMap){
 
   var entries = Array.from(fileAnalysisMap.entries());
-  //console.log(fileAnalysisMap);
 
   var fileN = "fileLocations.txt";
   var stream = fs.createWriteStream(fileN, {flags:'w'});
@@ -459,5 +577,77 @@ exports.outputFileAnalysisData = function(fileAnalysisMap){
     stream.write(entries[x][1]);
     stream.write("\n");
 
+  }
+}
+
+// To change dataMap into its required output format where our data is in the
+// format:
+//[ ["nameOfFile.txt", "data that is going to be written into file"],
+// ["nextFile.txt", "some other data"]]
+exports.outputDatabases = function(databases){
+
+  // Write new contents
+  var finalFormat = new Array();
+  for (var x = 0; x < databases.length; x++){
+
+    var table = new Array();
+    // nameFile.txt
+    var fileN = databases[x][0];
+    table.push(fileN);
+    //var stream = fs.createWriteStream(fileN, {flags:'a'});
+    var dataWritten = "";
+    for(var y = 0; y < databases[x].length; y++){
+      var data = databases[x][y];
+
+      if(data != fileN){
+        for(const arr of data){
+          for(const num of arr){
+            dataWritten = dataWritten + num + " ";
+          }
+          dataWritten += "\n";
+        }
+        table.push(dataWritten);
+      }
+    }
+    //console.log(table);
+    finalFormat.push(table);
+  }
+
+  return finalFormat;
+}
+
+
+
+// For testing purposes
+exports.outputToFileDatabses = function(databases){
+  //console.log(databases);
+
+  // Clear existing contents:
+  for (var x = 0; x < databases.length; x++){
+
+    var fileN = databases[x][0];
+    //console.log(fileN);
+    fs.truncate(fileN, 0, function(){});
+  }
+
+  // Write new contents
+  for (var x = 0; x < databases.length; x++){
+
+    var fileN = databases[x][0];
+    var stream = fs.createWriteStream(fileN, {flags:'a'});
+
+    for(var y = 0; y < databases[x].length; y++){
+      var data = databases[x][y];
+
+      if(data != fileN){
+        for(const arr of data){
+          for(const num of arr){
+            stream.write(num + " ");
+          }
+          stream.write("\n");
+        }
+      }
+    }
+    stream.end();
   }
 }

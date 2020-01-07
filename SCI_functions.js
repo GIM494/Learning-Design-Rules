@@ -2,42 +2,40 @@ exports.findClassAnnotations = function(subCL, attributeList, id_start, queryMap
 
   // Now we look for other attributes in the class
   // First we will output all the annotations on a class
-  var clsAnnotCandidate = subCL.findall('annotation');
+  let clsAnnotCandidate = subCL.findall('annotation');
   if (clsAnnotCandidate.length > 0){
 
-    for(var k = 0 ; k < clsAnnotCandidate.length; k++){
+    for(let k = 0 ; k < clsAnnotCandidate.length; k++){
 
-      var clsAnnot = clsAnnotCandidate[k];
+      let clsAnnot = clsAnnotCandidate[k];
 
-      var annotArgs = clsAnnot.findall('.//argument/expr');
+      let annotArgs = clsAnnot.findall('.//argument/expr');
 
-      var clsAnnotName = "class with annotation of \"@"
+      let clsAnnotName = "class with annotation of \"@"
                           + (clsAnnot.find('name').text)
                           + "\"";
 
-      var command = "//src:class[src:annotation[src:name/text()=\""
+      let command = "//src:class[src:annotation[src:name/text()=\""
                     + (clsAnnot.find('name').text) +"\"]]";
 
       if(annotArgs.length > 0){
         clsAnnotName += " with \n";
-        for(var q = 0; q < annotArgs.length; q++){
+        for(let q = 0; q < annotArgs.length; q++){
 
-          var node = annotArgs[q];
+          let node = annotArgs[q];
 
-          for(var u = 0; u < (node._children).length; u++){
+          for(let u = 0; u < (node._children).length; u++){
 
-            var ch = (node._children)[u];
-            //console.log(ch.text);
+            let ch = (node._children)[u];
 
             if(ch.text != null){
               clsAnnotName += ch.text;
             }
             else{
-              for(var v = 0; v < (ch._children).length; v++){
-                var c = (ch._children)[v];
+              for(let v = 0; v < (ch._children).length; v++){
+                let c = (ch._children)[v];
                 if(c.text != null){
                   clsAnnotName += c.text;
-                  //console.log(c.text);
                 }
               }
             }
@@ -48,16 +46,11 @@ exports.findClassAnnotations = function(subCL, attributeList, id_start, queryMap
         }
         // Remove trailing newline
         clsAnnotName = clsAnnotName.slice(0, -1);
-
-        //console.log(clsAnnotName);
       }
 
       command = command + "]]";
 
       if(!attributeList.has(clsAnnotName)){
-
-        //var command = "//src::stand in command for attribute " + clsAnnotName;
-        // console.log(command);
 
         attributeList.set(clsAnnotName, id_start.id);
         queryMap.set(command, id_start.id);
@@ -74,19 +67,19 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
   // What kind of constructor the class has
   // Choose last constructor because sometimes a default is defined and
   // then re-defined by another constructor (see Microtask.java)
-  var constructor = subCL.findall('block/constructor');
+  let constructor = subCL.findall('block/constructor');
   let name;
 
   if(constructor.length > 0){
-    for(var q = 0; q < constructor.length; q++){
+    for(let q = 0; q < constructor.length; q++){
 
-      var constr = constructor[q];
-      var constructorBody = constr.find('block');
+      let constr = constructor[q];
+      let constructorBody = constr.find('block');
 
-      var memVarSet = [];
-      var setTo = [];
+      let memVarSet = [];
+      let setTo = [];
 
-      var constrBodyList = constructorBody.find(".*");
+      let constrBodyList = constructorBody.find(".*");
       if(constrBodyList != undefined){
 
         name = "class with non-empty constructor";
@@ -94,8 +87,7 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
         // Check if attribute has been seen globally
         if(!attributeList.has(name)){
 
-          var command = "//src:class[count(src:block/src:constructor/src:block/*)>0]";
-          //console.log(command);
+          let command = "//src:class[count(src:block/src:constructor/src:block/*)>0]";
 
           attributeList.set(name, id_start.id);
           queryMap.set(command, id_start.id);
@@ -106,24 +98,24 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
         name = "";
 
         // Constructor sets member variables
-        var constructorExpr = constructorBody.findall('expr_stmt/expr');
+        let constructorExpr = constructorBody.findall('expr_stmt/expr');
 
         // If member variables are set...
-        for(var v = 0; v < constructorExpr.length; v++){
+        for(let v = 0; v < constructorExpr.length; v++){
 
-          var expr = constructorExpr[v];
+          let expr = constructorExpr[v];
           name = expr.find('name/name');
-          var op = expr.find('operator');
+          let op = expr.find('operator');
 
           // If there exists some expr of the form this.field = _____
           if( ((name != null) && (name.text == "this")) && ((op != null) && (op.text == "="))){
 
             // Store the names of the member variables that are set
-            var memVar = ((expr._children[0])._children[2]).text;
+            let memVar = ((expr._children[0])._children[2]).text;
             memVarSet.push(memVar);
 
             // Store names of things that member variables are set to
-            var setToName = expr._children[2];
+            let setToName = expr._children[2];
 
             // Double check that it's not set to a literal
             if (setToName == null){
@@ -142,19 +134,25 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
         if(memVarSet.length > 0){
           memVarSet.sort();
 
-          var augmentedMemVarSet = memVarSet.slice(0);
+          let augmentedMemVarSet = memVarSet.slice(0);
 
-          for(var x = 0; x < memVarSet.length; x++){
-            augmentedMemVarSet[x] = " member variable with name \"" + memVarSet[x] + "\"";
+          for(let x = 0; x < memVarSet.length; x++){
+            augmentedMemVarSet[x] = " declaration statement with name \"" + memVarSet[x] + "\"";
           }
-          name = "constructor must set " + augmentedMemVarSet.join(" and ");
+
+          // Previous name
+          //name = "constructor must set " + augmentedMemVarSet.join(" and ");
+
+          // New name
+          name = "class must have constructor with ( "
+                  + augmentedMemVarSet.join(" and ") + " )";
 
           // Check if attribute has been seen globally
           if(!attributeList.has(name)){
 
-            var command = "src:class[src:block/src:constructor[(src:parameter_list/src:parameter/src:decl[src:name[text()=\""
+            let command = "src:class[src:block/src:constructor[(src:parameter_list/src:parameter/src:decl[src:name[text()=\""
                           + memVarSet[0] + "\"]]";
-            for (var x = 1; x < memVarSet.length; x++){
+            for (let x = 1; x < memVarSet.length; x++){
               command = command + " and " + "src:class[src:block/src:constructor[(src:parameter_list/src:parameter/src:decl[src:name[text()=\""
                             + memVarSet[x] + "\"]]";
             }
@@ -168,25 +166,34 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
         }
 
         // Check for calls to constructor
-        var allExpr = constructorBody.findall('.//expr');
-        for (var u = 0; u < allExpr.length; u++){
+        let allExpr = constructorBody.findall('.//expr');
+        for (let u = 0; u < allExpr.length; u++){
 
-          var exp = allExpr[u];
-          var op = exp.find('operator');
-          var call = exp.find('call/name');
+          let exp = allExpr[u];
+          let op = exp.find('operator');
+          let call = exp.find('call/name');
 
           if ((op != null) && (op.text == "new") && (call != null) && (call.text != null)){
-            name = "constructor must call constructor of class \"" + call.text + "\" ";
-            //console.log(name);
+            // Old Name
+            //name = "constructor must call constructor of class \"" + call.text + "\" ";
+            // New Name
+            name = "class must have constructor with expression statement \"new "
+                   + call.text + "\"";
 
             if(!attributeList.has(name)){
-
-              var command = "//src:constructor[src:block/src:expr_stmt/src:expr/"
+              // src:expr[src:call/src:name/text()="constructor_name" and src:operator[text()=\"new\" and position()=1]]
+              // Old command
+              /*
+              let command = "//src:constructor[src:block/src:expr_stmt/src:expr/"
                             + "src:call/src:name/text()=\"" + call.text
                             + "\" or "
                             + "src:block/src:decl_stmt/src:decl/scr:init/src:expr"
                             + "/src:call/src:name/text()=\"" + call.text + "\"]";
-              // console.log(command);
+              */
+              // New Command
+              let command = "//src:constructor[src:block/src:expr_stmt/src:expr/"
+                            + "src:call/src:name/text()=\"" + call.text
+                            + "\" and src:operator[text()=\"new\" and position()=1]]";
 
               attributeList.set(name, id_start.id);
               queryMap.set(command, id_start.id);
@@ -201,12 +208,10 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
       // attribute saying so
       else{
         name = "class has empty-body constructor";
-        //console.log(name);
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
 
-          var command = "//src:class[count(src:block/src:constructor/src:block/*)=0]";
-          // console.log(command);
+          let command = "//src:class[count(src:block/src:constructor/src:block/*)=0]";
 
           attributeList.set(name, id_start.id);
           queryMap.set(command, id_start.id);
@@ -219,58 +224,57 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
       // Assume all parameters passed to the constructor are stored
       // as member variables
       // Assume that all parameters are stored as member variables
-      var allParamsStored = true;
-      var allParamTypes = "";
-      var constrParamTypes = [];
+      let allParamsStored = true;
+      let allParamTypes = "";
+      let constrParamTypes = [];
 
-      var paramsList = constr.findall('parameter_list/parameter/decl');
+      let paramsList = constr.findall('parameter_list/parameter/decl');
 
-      for(var u = 0; u < paramsList.length; u++){
+      for(let u = 0; u < paramsList.length; u++){
 
-        var p = paramsList[u];
-        var paramName = p.find('name');
+        let p = paramsList[u];
+        let paramName = p.find('name');
 
         if(paramName.text != null && !setTo.includes(paramName.text)){
           allParamsStored = false;
         }
 
-        var paramType = p.find('type/name');
+        let paramType = p.find('type/name');
         if(paramType.text == null){
           paramType = paramType.find('name');
         }
 
-        if(!constrParamTypes.includes(paramType)){
+        if(!constrParamTypes.includes(paramType.text) && paramType.text != ""){
           constrParamTypes.push(paramType.text);
         }
       }
 
       constrParamTypes.sort();
 
-      for(var u = 0; u < constrParamTypes.length; u++){
+      for(let u = 0; u < constrParamTypes.length; u++){
 
-        var t = constrParamTypes[u];
-        allParamTypes = "\"" + t + "\"";
+        let t = constrParamTypes[u];
+        allParamTypes = allParamTypes + " parameter with type \"" + t + "\"";
 
-        if (t != constrParamTypes[-1]){
-          allParamTypes = " and ";
+        if (u < constrParamTypes.length - 1){
+          allParamTypes += " and ";
         }
       }
 
       if(allParamTypes != ""){
-        name = "class with constructor with parameters of type " + allParamTypes;
+        name = "class with constructor with ( " + allParamTypes + " )";
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
 
           // Make query
-          var command = "src:class[src:block/src:constructor[(src:parameter_list/src:parameter/src:decl[src:type['"
+          let command = "src:class[src:block/src:constructor[(src:parameter_list/src:parameter/src:decl[src:type['"
                         + constrParamTypes[0] + "']]";
 
-          for(var u = 1; u < constrParamTypes.length; u++){
+          for(let u = 1; u < constrParamTypes.length; u++){
             command = command + " and "
                       + "src:class[src:block/src:constructor[(src:parameter_list/src:parameter/src:decl[src:type['"
                       + constrParamTypes[u] + "']]";
           }
-          //console.log(command);
 
           attributeList.set(name, id_start.id);
           queryMap.set(command, id_start.id);
@@ -285,14 +289,12 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
           name = "class with constructor that stores all parameters as member variables";
           // Check if this attribute has been seen globally
           if(!attributeList.has(name)){
-            //console.log(name);
             // logic: class[count(argument in statements) = count(arguments)]
-            var command = "//src:class[count(src:block/src:constructor/src:parameter_list/src:parameter/"
+            let command = "//src:class[count(src:block/src:constructor/src:parameter_list/src:parameter/"
                           + "src:decl/src:name[text()=ancestor::src:constructor/src:block//src:expr_stmt/"
                           + "src:expr[src:name[1]/src:name/text()=\"this\" and src:operator/text()=\"=\"]/"
                           + "src:name[2]/text()])=count(src:block/src:constructor/src:parameter_list/"
                           + "src:parameter)]";
-            // console.log(command);
 
             attributeList.set(name, id_start.id);
             queryMap.set(command, id_start.id);
@@ -311,8 +313,7 @@ exports.findConstructors = function(subCL, attributeList, id_start, queryMap){
     // Check if this attribute has been seen globally
     if(!attributeList.has(name)){
 
-      var command = "//src:class[count(src:block/src:constructor)=0]";
-      // console.log(command);
+      let command = "//src:class[count(src:block/src:constructor)=0]";
 
       attributeList.set(name, id_start.id);
       queryMap.set(command, id_start.id);
@@ -339,23 +340,28 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
   // is frequently associated, then we know that that member field was
   // frequent but not the annotation itself.
   let name;
-  var declarations = subCL.findall('block/decl_stmt/decl');
+  let declarations = subCL.findall('block/decl_stmt/decl');
   if (declarations != null){
 
-    for(var x = 0; x < declarations.length; x++){
+    for(let x = 0; x < declarations.length; x++){
 
-      var decl = declarations[x];
-      var memberVarName = decl.find('name');
+      let decl = declarations[x];
+      let memberVarName = decl.find('name');
 
       if(memberVarName.text != null){
 
-        name = "class has member field with name \"" + memberVarName.text + "\"";
+        // New name
+        name = "class must have declaration statement with name \""
+              + memberVarName.text + "\"";
+        // Old Name
+        //name = "class has member field with name \"" + memberVarName.text + "\"";
+
+
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
 
-          var command = "src:class[src:block/src:decl_stmt/src:decl/src:name[text()=\""
+          let command = "src:class[src:block/src:decl_stmt/src:decl/src:name[text()=\""
                         + memberVarName.text + "\"]";
-          //console.log(command);
 
           attributeList.set(name, id_start.id);
           queryMap.set(command, id_start.id);
@@ -366,36 +372,44 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
       }
 
       // Generate feature for all member variable names with annotations
-      var memberVarAnnotations = decl.findall('annotation');
+      let memberVarAnnotations = decl.findall('annotation');
 
       if(memberVarAnnotations != null){
 
-        for(var q = 0; q < memberVarAnnotations.length; q++){
+        for(let q = 0; q < memberVarAnnotations.length; q++){
 
-          var annot = memberVarAnnotations[q];
-          var annotName = annot.find('name');
-          var memberVarAnnotAttr = "class has member field with name \""
+          let annot = memberVarAnnotations[q];
+          let annotName = annot.find('name');
+          // New name
+          let memberVarAnnotAttr = "class must have declaration statement with ( "
+           + "annotation \"" + annotName.text + " and name \"" + memberVarName.text + " )";
+          // Old name
+          /*let memberVarAnnotAttr = "class has member field with name \""
                                    + memberVarName.text
                                    + "\" and with annotation \" @"
                                    + annotName.text + "\"";
-          var annotArgs = annot.findall('.//argument/expr');
+          */
+
+          /* Changed exact annotation attributes for member variable annotation
+          * not listed
+          let annotArgs = annot.findall('.//argument/expr');
 
           if(annotArgs.length > 0){
             memberVarAnnotAttr += " with \n";
-            for(var z = 0; z < annotArgs.length; z++){
+            for(let z = 0; z < annotArgs.length; z++){
 
-              var node = annotArgs[z];
+              let node = annotArgs[z];
 
-              for(var u = 0; u < (node._children).length; u++){
+              for(let u = 0; u < (node._children).length; u++){
 
-                var ch = (node._children)[u];
+                let ch = (node._children)[u];
 
                 if(ch.text != null){
                   memberVarAnnotAttr += ch.text;
                 }
                 else{
-                  for(var v = 0; v < (ch._children).length; v++){
-                    var c = (ch._children)[v];
+                  for(let v = 0; v < (ch._children).length; v++){
+                    let c = (ch._children)[v];
                     if(c.text != null){
                       memberVarAnnotAttr += c.text;
                     }
@@ -407,13 +421,15 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
             }
             // Remove trailing newline
             memberVarAnnotAttr = memberVarAnnotAttr.slice(0, -1);
-          }
+          } */
 
           // Check if this attribute has been seen globally
           if(!attributeList.has(memberVarAnnotAttr)){
 
-            var command = "//src::stand in command for attribute " + memberVarAnnotAttr;
-            // console.log(command);
+            let command = "//src::class[src:annotation/src:name/text()=\""
+                          + annotName.text
+                          + "\" and src:block/src:decl_stmt/src:decl/src:name/text()=\""
+                          + memberVarName.text + "\"]";
 
             attributeList.set(memberVarAnnotAttr , id_start.id);
             queryMap.set(command, id_start.id);
@@ -424,22 +440,26 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
       }
 
       // Generate feature for all member variable types
-      var memberVarType = decl.find('type/name');
+      let memberVarType = decl.find('type/name');
 
       // Check for nesting
       if(memberVarType != null){
         if(memberVarType.text == null){
           memberVarType = memberVarType.find('name');
         }
-        name = "class has member field of type \""
+
+        // New name
+        name = "class must have declaration statement with type \""
                + memberVarType.text + "\"";
+        // Old name
+        //name = "class has member field of type \""
+        //       + memberVarType.text + "\"";
 
         // Check whether this attribute has been seen globally
         if(!attributeList.has(name) && memberVarType.text != ""){
 
-          var command = "src:class[descendant-or-self::src:decl_stmt/src:decl[src:type['"
+          let command = "src:class[descendant-or-self::src:decl_stmt/src:decl[src:type['"
                         + memberVarType.text + "']]]";
-          //console.log(command);
 
           attributeList.set(name, id_start.id);
           queryMap.set(command, id_start.id);
@@ -454,17 +474,24 @@ exports.findMemberVars = function(subCL, attributeList, id_start, queryMap){
           if(memberVarType.text == ""){
             memberVarType = memberVarType.find('name');
           }
-          name = "class has member field of name \""
+
+          // New name
+          name  = "class must have declaration statement with ( type \""
+          + memberVarType.text + "\" and name \"" + memberVarName.text + "\" )";
+
+          // Old Name
+          /*name = "class has member field of name \""
                  + memberVarName.text
                  + "\" of type \""
                  + memberVarType.text + "\"";
+          */
+
             // Check whether attribute has been seen globally
             if(!attributeList.has(name)){
 
-              var command = "src:class[descendant-or-self::src:decl_stmt/src:decl[src:type['"
+              let command = "src:class[descendant-or-self::src:decl_stmt/src:decl[src:type['"
                             + memberVarType.text + "']]]" + " and src:name[text()=\""
                             + memberVarName.text + "\"])]]";
-              //console.log(command);
 
               attributeList.set(name, id_start.id);
               queryMap.set(command, id_start.id);
@@ -483,16 +510,21 @@ exports.findImplements = function(subCL, attributeList, id_start, queryMap){
 
   // What a class implements
   let name;
-  var classImplements = subCL.find('super/implements');
+  let classImplements = subCL.find('super/implements');
   if (classImplements != null){
-    name = "class with implementation of \""
+    // New name
+    name = "class must have implementation of \""
            + (classImplements.find('name')).text + "\"";
+
+    // Old name
+    //name = "class with implementation of \""
+    //       + (classImplements.find('name')).text + "\"";
+
      // Check whether attribute has been seen globally
      if(!attributeList.has(name)){
 
-       var command = "src:class[src:super/src:implements/src:name[text()=\""
+       let command = "src:class[src:super/src:implements/src:name[text()=\""
                      + (classImplements.find('name')).text + "\"]]";
-        //console.log(command);
 
        attributeList.set(name, id_start.id);
        queryMap.set(command, id_start.id);
@@ -509,7 +541,7 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
   let name = "";
 
   // Class visibility specifier
-  var clsSpecificity = subCL.find('specifier');
+  let clsSpecificity = subCL.find('specifier');
   // If the class does not have an explicit visitbilit specifier
   // then it is public by default
   if(clsSpecificity == null){
@@ -519,12 +551,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
     clsSpecificity = clsSpecificity.text;
   }
 
-  name = "is " + clsSpecificity + " class";
+  // New name
+  name = "class must have visibility \"" + clsSpecificity + "\"";
+  // Old name
+  //name = "is " + clsSpecificity + " class";
+
   // Check wether attribute has been seen globally
   if(!attributeList.has(name)){
 
-    var command = "src:class[src:specifier[text()=\"" + clsSpecificity + "\"]]";
-    //console.log(command);
+    let command = "src:class[src:specifier[text()=\"" + clsSpecificity + "\"]]";
 
     attributeList.set(name, id_start.id);
     queryMap.set(command, id_start.id);
@@ -542,20 +577,20 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
   // one consideration to note is that we may want to know that a function is in
   // a class that is a subclass of X, or that it is in a class that extends Y, etc.
 
-  var funcList = subCL.findall('block/function');
+  let funcList = subCL.findall('block/function');
 
-  for(var x = 0; x < funcList.length; x++){
+  for(let x = 0; x < funcList.length; x++){
 
-    var fnc = funcList[x];
+    let fnc = funcList[x];
 
     // Get the function name
-    var fncName = fnc.find('name');
+    let fncName = fnc.find('name');
 
     // Get visibility specifiers for the functions
     // This will capture visibility specifiers, static, and abstract
     // functions
-    var fncSpec = fnc.findall('specifier');
-    var fncSpecType = "";
+    let fncSpec = fnc.findall('specifier');
+    let fncSpecType = "";
 
     // If the function didn't have a visibility specifier then we
     // default to the class' visibility
@@ -583,8 +618,8 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
       }
 
       // Check for other keywords such as abstract or static
-      for(var n = 0; n < fncSpec.length; n++){
-        var spec = fncSpec[n];
+      for(let n = 0; n < fncSpec.length; n++){
+        let spec = fncSpec[n];
         // If statement here to avoid adding the visbility specifier
         // twice
         if (spec.text != fncSpecType){
@@ -593,17 +628,25 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
       }
     }
 
+    // New name
+    name = "class must have function with ( visibility \""
+           + fncSpecType
+           + "\"  and name \""
+           + fncName.text + "\" )";
+
+    // Old name
+    /*
     name = "class with function of visibility \""
            + fncSpecType
            + "\"  and name \""
            + fncName.text + "\"";
+    */
 
     // Check whether attribute has been seen globally
     if(!attributeList.has(name)){
 
-      var command = "src:class[src:block/src:function[(src:specifier[text()=\""
+      let command = "src:class[src:block/src:function[(src:specifier[text()=\""
                    + fncSpecType + "\"] and src:name[text()=\"" + fncName.text + "\"])]]";
-      //console.log(command);
 
       attributeList.set(name, id_start.id);
       queryMap.set(command, id_start.id);
@@ -613,12 +656,12 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
    name = "";
    fncSpecType = "";
 
-   var allExpr = fnc.findall('.//expr');
-   for(var g = 0; g < allExpr.length; g++){
+   let allExpr = fnc.findall('.//expr');
+   for(let g = 0; g < allExpr.length; g++){
 
-     var expr = allExpr[g];
-     var op = expr.find('operator');
-     var call = expr.find('call/name');
+     let expr = allExpr[g];
+     let op = expr.find('operator');
+     let call = expr.find('call/name');
 
      if( op!=null && op.text == "new" && call!=null && call.text!=null){
 
@@ -626,20 +669,26 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
          call = call.find('name');
        }
 
+       // Old Name
+       /*
        name = "function of name \""
                + fncName.text
                + "\" must call constructor of name \""
                + call.text + "\"";
+      */
+      // New name
+      name = "class must have function with ( name \""
+            + fncName.text + "\" and expression statement \"new "
+            + call.text + "\" )";
 
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
 
-         var command = "//src:function[src:name/text()=\"" + fncName.text
+         let command = "//src:function[src:name/text()=\"" + fncName.text
                        + "\" and (src:block/src:expr_stmt/src:expr/src:call"
                        + "/src:name/text()=\"" + call.text +
                        + "\" or src:block/src:decl_stmt/src:decl/src:init/"
                        + "src:expr/src:call/src:name/text()=\"" + call.text + "\")]";
-         // console.log(command);
 
          attributeList.set(name, id_start.id);
          queryMap.set(command, id_start.id);
@@ -652,16 +701,16 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
 
    // Combine searches for (1) constructor call and (2) function call in
    // return statement (combined for efficiency)
-   var fncReturnInfo = fnc.find('.//block/return/expr');
+   let fncReturnInfo = fnc.find('.//block/return/expr');
    // Function return info exists: search for constructor or call
    if(fncReturnInfo != null){
 
      // (1) Calls constructor (expandable)
-     var constructorCall = fncReturnInfo.find('operator');
+     let constructorCall = fncReturnInfo.find('operator');
 
      if (constructorCall != null && constructorCall.text == "new"){
 
-      var call = constructorCall.find('call/name');
+      let call = constructorCall.find('call/name');
 
       if(call!=null && call.text!=null){
 
@@ -669,18 +718,24 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
           call = call.find('name');
         }
 
-         name = "function of name \""
-                 + fncName.text
-                 + "\" must call constructor of class " + call.text
-                 + " in return statement";
+        // Old Name
+        /*
+        name = "function of name \""
+                + fncName.text
+                + "\" must call constructor of name \""
+                + call.text + "\"";
+        */
+        // New name
+        name = "class must have function with ( name \""
+               + fncName.text + "\" and return value \"new "
+               + call.text + "\" )";
 
          // Check whether attribute has been seen globally
          if(!attributeList.has(name)){
 
-           var command = "//src:function[src:name/text()=\"" + fncName.text
+           let command = "//src:function[src:name/text()=\"" + fncName.text
                         +"\" and src:block//src:return/src:expr/src:call//"
                         + "src:name/text()=\"" + call.text +"\"]";
-           console.log(command);
 
            attributeList.set(name, id_start.id);
            queryMap.set(command, id_start.id);
@@ -690,33 +745,39 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
          name = "";
 
       }
-
-
      }
 
      // (2) Returns output from function call (expandable)
-     var retOutputFromFncCall = fncReturnInfo.find('call');
+     let retOutputFromFncCall = fncReturnInfo.find('call');
 
      if (retOutputFromFncCall != null){
 
-       call = retOutputFromFncCall.find('call/name');
+       let callName = retOutputFromFncCall.find('name');
 
-       if(call!=null && call.text!=null){
-         if(call.text == ""){
-           call = call.find('name');
-         }
+      if (callName != null && callName.text != null){
 
+        if(callName.text == ""){
+          callName = callName.find('name');
+        }
+
+         // Old name
+         /*
          name = "function of name \"" + fncName.text
                  + "\" must return output from function of name \""
                  + call.text + "\"";
+        */
+        // New name
+        name = "class must have function with ( name \""
+                + fncName.text + "\" and return value \""
+                + callName.text + "()\" )";
+
 
          // Check whether attribute has been seen globally
          if(!attributeList.has(name)){
 
-           var command =  "//src:function[src:name/text()=\"" + fncName.text
+           let command =  "//src:function[src:name/text()=\"" + fncName.text
                         +"\" and src:block//src:return/src:expr/src:call//"
-                        + "src:name/[text()=\"" + call.text +"\"]]";
-           //console.log(command);
+                        + "src:name/[text()=\"" + callName.text +"\"]]";
 
            attributeList.set(name, id_start.id);
            queryMap.set(command, id_start.id);
@@ -724,49 +785,20 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
            id_start.id += 1;
          }
          name = "";
-
-         var callName = retOutputFromFncCall.find('name');
-         if (callName != null && callName.text != null){
-
-           if(callName.text == ""){
-             callName = callName.find('name');
-           }
-
-           name = "function of name \"" + fncName.text
-                  + "must return output from function of name \""
-                  + callName.text + "\"";
-
-          // Check whether attribute has been seen globally
-          if(!attributeList.has(name)){
-
-            var command = "//src:function[src:name/text()=\"" + fncName.text
-                          + "\" and src:block//src:return/src:expr/src:call//"
-                          + "src:name/text()=\"" + callName.text + "\"]";
-            // console.log(command);
-
-            attributeList.set(name, id_start.id);
-            queryMap.set(command, id_start.id);
-
-            id_start.id += 1;
-
-          }
-           name = "";
-         }
        }
      }
    }
    // Has parameters (expandable)
-   var fncParams = fnc.findall('parameter_list/parameter');
-   var fncTypes = [];
+   let fncParams = fnc.findall('parameter_list/parameter');
+   let fncTypes = [];
 
    if (fncParams == null){
      name = "function of name \"" + fncName.text + "\" has no parameters";
      // Check whether attribute has been seen globally
      if(!attributeList.has(name)){
 
-       var command = "//src:function[count(src:parameter_list/src:parameter)=0 and src:name/text()=\""
+       let command = "//src:function[count(src:parameter_list/src:parameter)=0 and src:name/text()=\""
                       + fncName.text + "\"]";
-       // console.log(command);
 
        attributeList.set(name, id_start.id);
        queryMap.set(command, id_start.id);
@@ -777,11 +809,10 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
    }
    else{
 
-     var allFncParamTypes = "";
-     for (var m = 0; m < fncParams.length; m++){
+     for (let m = 0; m < fncParams.length; m++){
 
-       var p = fncParams[m];
-       var paramType = p.find('decl/type/name');
+       let p = fncParams[m];
+       let paramType = p.find('decl/type/name');
 
        // Check for nesting
        if (paramType.text == null){
@@ -794,10 +825,11 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
      }
 
      fncTypes.sort();
-     for (var m = 0; m < fncTypes.length; m++){
+     let allFncParamTypes = "";
+     for (let m = 0; m < fncTypes.length; m++){
 
-       var allFncParamTypes = allFncParamTypes
-                              + "parameter of type \""
+       allFncParamTypes = allFncParamTypes
+                              + "parameter with type \""
                               + fncTypes[m] + "\"";
 
         if (m != fncTypes.length - 1){
@@ -806,18 +838,23 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
      }
 
      if (allFncParamTypes != ""){
-
+       // New name
+       name = "class must have function with ( name \""
+              + fncName.text + "\" and " + allFncParamTypes + ")";
+       // Old Name
+       /*
        name = "function of name \""
               + fncName.text
               + "has " + allFncParamTypes;
+      */
 
         // Check whether attribute has been seen globally
         if(!attributeList.has(name)){
 
           // Make the query/command
-          var command = "src:class[src:block/src:function[(src:name[text()=\""
+          let command = "src:class[src:block/src:function[(src:name[text()=\""
                     + fncName.text + "\"]";
-          for (var m = 0; m < fncTypes.length; m++){
+          for (let m = 0; m < fncTypes.length; m++){
             command = command + " and src:parameter_list/src:parameter/src:decl[src:type['"
                         + fncTypes[m] +"']]";
           }
@@ -836,16 +873,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
    fncTypes = [];
 
    // Modifies member variable with specific name
-   var modifiesMemberVar = fnc.findall('block/expr_stmt/expr');
+   let modifiesMemberVar = fnc.findall('block/expr_stmt/expr');
    if (modifiesMemberVar != null){
-     for (var n = 0; n < modifiesMemberVar.length; n++){
+     for (let n = 0; n < modifiesMemberVar.length; n++){
 
-       var mod = modifiesMemberVar[n];
-       var attrName = mod.find('name/name');
-       var op = mod.find('operator');
-       var call = mod.find('call/name/name');
+       let mod = modifiesMemberVar[n];
+       let attrName = mod.find('name/name');
+       let op = mod.find('operator');
+       let call = mod.find('call/name/name');
 
-       //console.log(call);
        if (attrName!= null && attrName.text == "this" && op != null && op.text == "="
            && call != null){
 
@@ -857,11 +893,10 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
          // Check whether attribute has been seen globally
          if(!attributeList.has(name)){
 
-           var command = "//src:function[src:name/text()=\"" + fncName.text
+           let command = "//src:function[src:name/text()=\"" + fncName.text
                          + "\" and src:block//src:expr_stmt/src:expr[src:name[1]"
                          + "/src:name[1]=\"this\" and src:name[1]/src:name[2]=\""
                          + call.text +"\" and src:operator/text()=\"=\"]]";
-           // console.log(command);
 
            attributeList.set(name, id_start.id);
            queryMap.set(command, id_start.id);
@@ -875,7 +910,7 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
    }
 
    // Combines searches for (1) is void and (2) returns type
-   var returnType = fnc.find('type/name');
+   let returnType = fnc.find('type/name');
    if(returnType != null){
      // Check for list: when the return type is a list, the function's
      // type nests the list name with other arguments.
@@ -884,15 +919,20 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
      }
      // (1) Is void
      if (returnType.text == "void"){
+       // New name
+       name =  "class must have function with ( type \"void\" and name \""
+                + fncName.text + "\" )";
+       // Old Name
+       /*
        name =  "class with function of name \""
                 + fncName.text
                 + "\" of type \"void\"";
+        */
         // Check whether attribute has been seen globally
         if(!attributeList.has(name)){
 
-          var command = "src:class[src:block/src:function[(src:type['void'] and "
+          let command = "src:class[src:block/src:function[(src:type['void'] and "
                          + "src:name[text()=\"" + fncName.text + "\"])]]";
-          //console.log(command);
 
           attributeList.set(name, id_start.id);
           queryMap.set(command, id_start.id);
@@ -904,15 +944,22 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
      // (2) Returns type...
      else{
 
+       // New name
+       name =  "class must have function with ( type \"" + returnType.text + "\" and name \""
+                + fncName.text + "\" )";
+
+       // Old name
+       /*
        name = "class with function of name \""
                + fncName.text
                + "\" returns type \""
                + returnType.text + "\"";
+        */
 
        // Check whether attribute has been seen globally
        if(!attributeList.has(name)){
 
-         var command = "src:class[src:block/src:function[(src:type['" + returnType.text
+         let command = "src:class[src:block/src:function[(src:type['" + returnType.text
                         + "'] and " + "src:name[text()=\"" + fncName.text + "\"])]]";
 
          attributeList.set(name, id_start.id);
@@ -925,34 +972,44 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
    }
 
    // Has annotation
-   var fncAnnotCandidate = fnc.findall('annotation');
+   let fncAnnotCandidate = fnc.findall('annotation');
    if (fncAnnotCandidate != null){
 
-     for (var g = 0; g < fncAnnotCandidate.length; g++){
+     for (let g = 0; g < fncAnnotCandidate.length; g++){
 
-       var fncAnnot = fncAnnotCandidate[g];
+       let fncAnnot = fncAnnotCandidate[g];
+       // New name
+       name = "class must have function with ( annotation \""
+              + (fncAnnot.find('name')).text + "\" and name \""
+              + fncName.text + "\" )";
+
+       // Old name
+       /*
        name = "function of name \"" + fncName.text
                + "\" has annotation \"@"
                + (fncAnnot.find('name')).text
                + "\"";
-        var annotArgs = fncAnnot.findall('argument/expr');
+      */
+
+        /* Changed so that annotation attribute values are not listed/included
+        let annotArgs = fncAnnot.findall('argument/expr');
 
         if(annotArgs.length > 0){
           name += " with \n";
-          for(var z = 0; z < annotArgs.length; z++){
+          for(let z = 0; z < annotArgs.length; z++){
 
-            var node = annotArgs[z];
+            let node = annotArgs[z];
 
-            for(var u = 0; u < (node._children).length; u++){
+            for(let u = 0; u < (node._children).length; u++){
 
-              var ch = (node._children)[u];
+              let ch = (node._children)[u];
 
               if(ch.text != null){
                 name += ch.text;
               }
               else{
-                for(var v = 0; v < (ch._children).length; v++){
-                  var c = (ch._children)[v];
+                for(let v = 0; v < (ch._children).length; v++){
+                  let c = (ch._children)[v];
                   if(c.text != null){
                     name += c.text;
                   }
@@ -966,13 +1023,15 @@ exports.findClsFunctions = function(subCL, attributeList, id_start, queryMap){
           // Remove trailing newline
           name = name.slice(0, -1);
         }
+        */
 
         // Check if this attribute has been seen globally
         if(!attributeList.has(name)){
 
-          // QUERY NOT YET FOUND
-          var command = "//src::stand in command for attribute " + name;
-          // console.log(command);
+          let command = "//src::class[src:annotation/src:name/text()=\""
+                        + (fncAnnot.find('name')).text
+                        + "\" and src:block/src:function/src:name/text()=\""
+                        + fncName.text + "\"]";
 
           attributeList.set(name, id_start.id);
           queryMap.set(command, id_start.id);
@@ -993,14 +1052,14 @@ exports.addClassAnnotations = function(subCL, attributes, allAttributes){
   //if(childName == "CrowdServlet" ) {console.log(childName);}
   // First we will output all the annotations on a class
   let name;
-  var clsAnnotCandidate = subCL.findall('annotation');
+  let clsAnnotCandidate = subCL.findall('annotation');
   if (clsAnnotCandidate.length > 0){
 
-    for(var k = 0 ; k < clsAnnotCandidate.length; k++){
+    for(let k = 0 ; k < clsAnnotCandidate.length; k++){
 
-      var clsAnnot = clsAnnotCandidate[k];
+      let clsAnnot = clsAnnotCandidate[k];
       //console.log(clsAnnot);
-      var annotArgs = clsAnnot.findall('.//argument/expr');
+      let annotArgs = clsAnnot.findall('.//argument/expr');
       //console.log(annotArgs);
       name = "class with annotation of \"@"
               + (clsAnnot.find('name').text)
@@ -1008,20 +1067,20 @@ exports.addClassAnnotations = function(subCL, attributes, allAttributes){
 
       if(annotArgs.length > 0){
         name += " with \n";
-        for(var q = 0; q < annotArgs.length; q++){
+        for(let q = 0; q < annotArgs.length; q++){
 
-          var node = annotArgs[q];
+          let node = annotArgs[q];
 
-          for(var u = 0; u < (node._children).length; u++){
+          for(let u = 0; u < (node._children).length; u++){
 
-            var ch = (node._children)[u];
+            let ch = (node._children)[u];
 
             if(ch.text != null){
               name += ch.text;
             }
             else{
-              for(var v = 0; v < (ch._children).length; v++){
-                var c = (ch._children)[v];
+              for(let v = 0; v < (ch._children).length; v++){
+                let c = (ch._children)[v];
                 if(c.text != null){
                   name += c.text;
                 }
@@ -1048,18 +1107,18 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
   let name;
   // Choose last constructor because sometimes a default is defined and
   // then re-defined by another constructor (see Microtask.java)
-  var constructor = subCL.findall('block/constructor');
+  let constructor = subCL.findall('block/constructor');
 
   if(constructor.length > 0){
-    for(var q = 0; q < constructor.length; q++){
+    for(let q = 0; q < constructor.length; q++){
 
-      var constr = constructor[q];
-      var constructorBody = constr.find('block');
+      let constr = constructor[q];
+      let constructorBody = constr.find('block');
 
-      var memVarSet = [];
-      var setTo = [];
+      let memVarSet = [];
+      let setTo = [];
 
-      var constrBodyList = constructorBody.find(".*");
+      let constrBodyList = constructorBody.find(".*");
       if(constrBodyList != undefined){
 
         name = "class with non-empty constructor";
@@ -1071,24 +1130,24 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
         name = "";
 
         // Constructor sets member variables
-        var constructorExpr = constructorBody.findall('expr_stmt/expr');
+        let constructorExpr = constructorBody.findall('expr_stmt/expr');
 
         // If member variables are set...
-        for(var v = 0; v < constructorExpr.length; v++){
+        for(let v = 0; v < constructorExpr.length; v++){
 
-          var expr = constructorExpr[v];
+          let expr = constructorExpr[v];
           name = expr.find('name/name');
-          var op = expr.find('operator');
+          let op = expr.find('operator');
 
           // If there exists some expr of the form this.field = _____
           if( ((name != null) && (name.text == "this")) && ((op != null) && (op.text == "="))){
 
             // Store the names of the member variables that are set
-            var memVar = ((expr._children[0])._children[2]).text;
+            let memVar = ((expr._children[0])._children[2]).text;
             memVarSet.push(memVar);
 
             // Store names of things that member variables are set to
-            var setToName = expr._children[2];
+            let setToName = expr._children[2];
 
             // Double check that it's not set to a literal
             if (setToName == null){
@@ -1105,11 +1164,21 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
         }
         // Output something like "constructor sets member variables x,y,z"
         if(memVarSet.length > 0){
+
           memVarSet.sort();
-          for(var x = 0; x < memVarSet.length; x++){
-            memVarSet[x] = " member variable with name \"" + memVarSet[x] + "\"";
+
+          let augmentedMemVarSet = memVarSet.slice(0);
+
+          for(let x = 0; x < memVarSet.length; x++){
+            augmentedMemVarSet[x] = " declaration statement with name \"" + memVarSet[x] + "\"";
           }
-          name = "constructor must set " + memVarSet.join(" and ");
+
+          // Previous name
+          //name = "constructor must set " + augmentedMemVarSet.join(" and ");
+
+          // New name
+          name = "class must have constructor with ( "
+                  + augmentedMemVarSet.join(" and ") + " )";
 
           // Check if attribute has been seen globally
           if(allAttributes.has(name)){
@@ -1119,15 +1188,19 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
         }
 
         // Check for calls to constructor
-        var allExpr = constructorBody.findall('.//expr');
-        for (var u = 0; u < allExpr.length; u++){
+        let allExpr = constructorBody.findall('.//expr');
+        for (let u = 0; u < allExpr.length; u++){
 
-          var exp = allExpr[u];
-          var op = exp.find('operator');
-          var call = exp.find('call/name');
+          let exp = allExpr[u];
+          let op = exp.find('operator');
+          let call = exp.find('call/name');
 
           if ((op != null) && (op.text == "new") && (call != null) && (call.text != null)){
-            name = "constructor must call constructor of class \"" + call.text + "\" ";
+            // Old Name
+            //name = "constructor must call constructor of class \"" + call.text + "\" ";
+            // New Name
+            name = "class must have constructor with expression statement \"new "
+                   + call.text + "\"";
 
             if(allAttributes.has(name)){
               attributes.push(allAttributes.get(name));
@@ -1151,42 +1224,43 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
       // Assume all parameters passed to the constructor are stored
       // as member variables
       // Assume that all parameters are stored as member variables
-      var allParamsStored = true;
-      var allParamTypes = "";
-      var constrParamTypes = [];
+      let allParamsStored = true;
+      let allParamTypes = "";
+      let constrParamTypes = [];
 
-      var paramsList = constr.findall('parameter_list/parameter/decl');
+      let paramsList = constr.findall('parameter_list/parameter/decl');
 
-      for(var u = 0; u < paramsList.length; u++){
+      for(let u = 0; u < paramsList.length; u++){
 
-        var p = paramsList[u];
-        var paramName = p.find('name');
+        let p = paramsList[u];
+        let paramName = p.find('name');
 
         if(paramName.text != null && !setTo.includes(paramName.text)){
           allParamsStored = false;
         }
 
-        var paramType = p.find('type/name');
+        let paramType = p.find('type/name');
         if(paramType.text == null){
           paramType = paramType.find('name');
         }
 
-        if(!constrParamTypes.includes(paramType)){
+        if(!constrParamTypes.includes(paramType.text) && paramType.text != ""){
           constrParamTypes.push(paramType.text);
         }
       }
 
       constrParamTypes.sort();
 
-      for(var u = 0; u < constrParamTypes.length; u++){
+      for(let u = 0; u < constrParamTypes.length; u++){
 
-        var t = constrParamTypes[u];
-        allParamTypes = "\"" + t + "\"";
+        let t = constrParamTypes[u];
+        allParamTypes = allParamTypes + " parameter with type \"" + t + "\"";
 
-        if (t != constrParamTypes[-1]){
-          allParamTypes = " and ";
+        if (u < constrParamTypes.length - 1){
+          allParamTypes += " and ";
         }
       }
+
 
       if(allParamTypes != ""){
         name = "class with constructor with parameters of type " + allParamTypes;
@@ -1202,7 +1276,6 @@ exports.addConstructors = function(subCL, attributes, allAttributes){
           name = "class with constructor that stores all parameters as member variables";
           // Check if this attribute has been seen globally
           if(allAttributes.has(name)){
-            //console.log(name);
             attributes.push(allAttributes.get(name));
           }
           name = "";
@@ -1240,17 +1313,22 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
   // is frequently associated, then we know that that member field was
   // frequent but not the annotation itself.
   let name;
-  var declarations = subCL.findall('block/decl_stmt/decl');
+  let declarations = subCL.findall('block/decl_stmt/decl');
   if (declarations != null){
 
-    for(var x = 0; x < declarations.length; x++){
+    for(let x = 0; x < declarations.length; x++){
 
-      var decl = declarations[x];
-      var memberVarName = decl.find('name');
+      let decl = declarations[x];
+      let memberVarName = decl.find('name');
 
       if(memberVarName.text != null){
 
-        name = "class has member field with name \"" + memberVarName.text + "\"";
+        // New name
+        name = "class must have declaration statement with name \""
+              + memberVarName.text + "\"";
+        // Old Name
+        //name = "class has member field with name \"" + memberVarName.text + "\"";
+
         // Check if this attribute has been seen globally
         if(allAttributes.has(name)){
           attributes.push(allAttributes.get(name));
@@ -1259,36 +1337,43 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
       }
 
       // Generate feature for all member variable names with annotations
-      var memberVarAnnotations = decl.findall('annotation');
+      let memberVarAnnotations = decl.findall('annotation');
 
       if(memberVarAnnotations != null){
 
-        for(var q = 0; q < memberVarAnnotations.length; q++){
+        for(let q = 0; q < memberVarAnnotations.length; q++){
 
-          var annot = memberVarAnnotations[q];
-          var annotName = annot.find('name');
-          var memberVarAnnotAttr = "class has member field with name \""
+          let annot = memberVarAnnotations[q];
+          let annotName = annot.find('name');
+          // New name
+          let memberVarAnnotAttr = "class must have declaration statement with ( "
+           + "annotation \"" + annotName.text + " and name \"" + memberVarName.text + " )";
+          // Old name
+          /*let memberVarAnnotAttr = "class has member field with name \""
                                    + memberVarName.text
                                    + "\" and with annotation \" @"
                                    + annotName.text + "\"";
-          var annotArgs = annot.findall('.//argument/expr');
+          */
+
+          /*
+          let annotArgs = annot.findall('.//argument/expr');
 
           if(annotArgs.length > 0){
             memberVarAnnotAttr += " with \n";
-            for(var z = 0; z < annotArgs.length; z++){
+            for(let z = 0; z < annotArgs.length; z++){
 
-              var node = annotArgs[z];
+              let node = annotArgs[z];
 
-              for(var u = 0; u < (node._children).length; u++){
+              for(let u = 0; u < (node._children).length; u++){
 
-                var ch = (node._children)[u];
+                let ch = (node._children)[u];
 
                 if(ch.text != null){
                   memberVarAnnotAttr += ch.text;
                 }
                 else{
-                  for(var v = 0; v < (ch._children).length; v++){
-                    var c = (ch._children)[v];
+                  for(let v = 0; v < (ch._children).length; v++){
+                    let c = (ch._children)[v];
                     if(c.text != null){
                       memberVarAnnotAttr += c.text;
                     }
@@ -1301,6 +1386,7 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
             // Remove trailing newline
             memberVarAnnotAttr = memberVarAnnotAttr.slice(0, -1);
           }
+          */
 
           // Check if this attribute has been seen globally
           if(!allAttributes.has(memberVarAnnotAttr )){
@@ -1310,15 +1396,20 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
       }
 
         // Generate feature for all member variable types
-        var memberVarType = decl.find('type/name');
+        let memberVarType = decl.find('type/name');
 
         // Check for nesting
         if(memberVarType != null){
           if(memberVarType.text == null){
             memberVarType = memberVarType.find('name');
           }
-          name = "class has member field of type \""
-                  + memberVarType.text + "\"";
+
+          // New name
+          name = "class must have declaration statement with type \""
+                 + memberVarType.text + "\"";
+          // Old name
+          //name = "class has member field of type \""
+          //       + memberVarType.text + "\"";
 
           // Check whether this attribute has been seen globally
           // Check if this attribute has been seen globally
@@ -1333,15 +1424,21 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
             if(memberVarType.text == ""){
               memberVarType = memberVarType.find('name');
             }
-             name = "class has member field of name \""
-                     + memberVarName.text
-                     + "\" of type \""
-                     + memberVarType.text + "\"";
-              // Check whether attribute has been seen globally
-              if(allAttributes.has(name)){
-                attributes.push(allAttributes.get(name));
-              }
-              name = "";
+            // New name
+            name  = "class must have declaration statement with ( type \""
+            + memberVarType.text + "\" and name \"" + memberVarName.text + "\" )";
+
+            // Old Name
+            /*name = "class has member field of name \""
+                   + memberVarName.text
+                   + "\" of type \""
+                   + memberVarType.text + "\"";
+            */
+            // Check whether attribute has been seen globally
+            if(allAttributes.has(name)){
+              attributes.push(allAttributes.get(name));
+            }
+            name = "";
           }
         }
       }
@@ -1353,10 +1450,17 @@ exports.addMemberVars = function(subCL, attributes, allAttributes){
 exports.addImplementations = function(subCL, attributes, allAttributes){
   // Outside of declaration stuff
   // What a class implements
-  var classImplements = subCL.find('super/implements');
+  let classImplements = subCL.find('super/implements');
   if (classImplements != null){
-    let name = "class with implementation of \""
-           + (classImplements.find('name')).text + "\"";
+      // New name
+      name = "class must have implementation of \""
+             + (classImplements.find('name')).text + "\"";
+
+      // Old name
+      //name = "class with implementation of \""
+      //       + (classImplements.find('name')).text + "\"";
+
+     // Check whether attribute has been seen globally
 
      if(allAttributes.has(name)){
        attributes.push(allAttributes.get(name));
@@ -1368,7 +1472,7 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
 
   let name;
   // Class visibility specifier
-  var clsSpecificity = subCL.find('specifier');
+  let clsSpecificity = subCL.find('specifier');
   // If the class does not have an explicit visitbilit specifier
   // then it is public by default
   if(clsSpecificity == null){
@@ -1378,7 +1482,11 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
     clsSpecificity = clsSpecificity.text;
   }
 
-  var classSpecName = "is " + clsSpecificity + " class";
+  // New name
+  let classSpecName = "class must have visibility \"" + clsSpecificity + "\"";
+  // Old name
+  //let classSpecName = "is " + clsSpecificity + " class";
+
   // Check wether attribute has been seen globally
   if(allAttributes.has(classSpecName)){
     attributes.push(allAttributes.get(classSpecName));
@@ -1391,20 +1499,20 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
   // one consideration to note is that we may want to know that a function is in
   // a class that is a subclass of X, or that it is in a class that extends Y, etc.
 
-  var funcList = subCL.findall('block/function');
+  let funcList = subCL.findall('block/function');
 
-  for(var x = 0; x < funcList.length; x++){
+  for(let x = 0; x < funcList.length; x++){
 
-    var fnc = funcList[x];
+    let fnc = funcList[x];
 
     // Get the function name
-    var fncName = fnc.find('name');
+    let fncName = fnc.find('name');
 
     // Get visibility specifiers for the functions
     // This will capture visibility specifiers, static, and abstract
     // functions
-    var fncSpec = fnc.findall('specifier');
-    var fncSpecType = " ";
+    let fncSpec = fnc.findall('specifier');
+    let fncSpecType = " ";
 
     // If the function didn't have a visibility specifier then we
     // default to the class' visibility
@@ -1427,8 +1535,8 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
         fncSpecType = fncSpec[0].text;
       }
       // Check for other keywords such as abstract or static
-      for(var n = 0; n < fncSpec.length; n++){
-        var spec = fncSpec[n];
+      for(let n = 0; n < fncSpec.length; n++){
+        let spec = fncSpec[n];
         // If statement here to avoid adding the visbility specifier
         // twice
         if (spec.text != fncSpecType){
@@ -1437,10 +1545,20 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
       }
     }
 
+    // New name
+    name = "class must have function with ( visibility \""
+           + fncSpecType
+           + "\"  and name \""
+           + fncName.text + "\" )";
+
+    // Old name
+    /*
     name = "class with function of visibility \""
            + fncSpecType
            + "\"  and name \""
            + fncName.text + "\"";
+    */
+
     fncSpecType = "";
 
     if(allAttributes.has(name)){
@@ -1448,13 +1566,13 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
     }
     name = "";
 
-   var allExpr = fnc.findall('.//expr');
+   let allExpr = fnc.findall('.//expr');
 
-   for(var g = 0; g < allExpr.length; g++){
+   for(let g = 0; g < allExpr.length; g++){
 
-     var expr = allExpr[g];
-     var op = expr.find('operator');
-     var call = expr.find('call/name');
+     let expr = allExpr[g];
+     let op = expr.find('operator');
+     let call = expr.find('call/name');
 
      if( op!=null && op.text == "new" && call!=null && call.text!=null){
 
@@ -1476,27 +1594,44 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
 
    // Combine searches for (1) constructor call and (2) function call in
    // return statement (combined for efficiency)
-   var fncReturnInfo = fnc.find('.//block/return/expr');
+   let fncReturnInfo = fnc.find('.//block/return/expr');
    // Function return info exists: search for constructor or call
    if(fncReturnInfo != null){
 
      // (1) Calls constructor (expandable)
-     var constructorCall = fncReturnInfo.find('operator');
+     let constructorCall = fncReturnInfo.find('operator');
      if (constructorCall != null && constructorCall.text == "new"){
 
+       let call = constructorCall.find('call/name');
+
+       if(call!=null && call.text!=null){
+
+         if(call.text == ""){
+           call = call.find('name');
+         }
+       // COME BACK TO CHECK VALUE HERE
+       // Old name
+       /*
        name = "function of name \""
                + fncName.text
                + "\" must call constructor in return statement";
+
+      */
+      // New name
+      name = "class must have function with ( name \""
+             + fncName.text + "\" and return value \"new "
+             + call.text + "\" )";
 
        if(allAttributes.has(name)){
          attributes.push(allAttributes.get(name));
        }
        name = "";
      }
+   }
 
 
      // (2) Returns output from function call (expandable)
-     var retOutputFromFncCall = fncReturnInfo.find('call');
+     let retOutputFromFncCall = fncReturnInfo.find('call');
      if (retOutputFromFncCall != null){
        name = "function of name \"" + fncName.text
                + "\" must return output from function";
@@ -1506,16 +1641,23 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
        }
        name = "";
 
-       var callName = retOutputFromFncCall.find('name');
+       let callName = retOutputFromFncCall.find('name');
        if (callName != null && callName.text != null){
 
          if(callName.text == ""){
            callName = callName.find('name');
          }
 
-         name = "function of name \"" + fncName.text
-                + "must return output from function of name \""
-                + callName.text + "\"";
+        // Old name
+        /*
+        name = "function of name \"" + fncName.text
+                + "\" must return output from function of name \""
+                + call.text + "\"";
+       */
+       // New name
+       name = "class must have function with ( name \""
+               + fncName.text + "\" and return value \""
+               + callName.text + "()\" )";
 
          if(allAttributes.has(name)){
            attributes.push(allAttributes.get(name));
@@ -1526,8 +1668,8 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
    }
 
    // Has parameters (expandable)
-   var fncParams = fnc.findall('parameter_list/parameter');
-   var fncTypes = [];
+   let fncParams = fnc.findall('parameter_list/parameter');
+   let fncTypes = [];
 
    if (fncParams == null){
      name = "function of name \"" + fncName.text + "\" has no parameters";
@@ -1538,11 +1680,10 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
    }
    else{
 
-     var allFncParamTypes = "";
-     for (var m = 0; m < fncParams.length; m++){
+     for (let m = 0; m < fncParams.length; m++){
 
-       var p = fncParams[m];
-       var paramType = p.find('decl/type/name');
+       let p = fncParams[m];
+       let paramType = p.find('decl/type/name');
 
        // Check for nesting
        if (paramType.text == null){
@@ -1554,11 +1695,13 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
        }
      }
 
-     fncTypes.sort();
-     for (var m = 0; m < fncTypes.length; m++){
 
-       var allFncParamTypes = allFncParamTypes
-                              + "parameter of type \""
+     fncTypes.sort();
+     let allFncParamTypes = "";
+     for (let m = 0; m < fncTypes.length; m++){
+
+       allFncParamTypes = allFncParamTypes
+                              + "parameter with type \""
                               + fncTypes[m] + "\"";
 
         if (m != fncTypes.length - 1){
@@ -1568,9 +1711,15 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
 
      if (allFncParamTypes != ""){
 
+       // New name
+       name = "class must have function with ( name \""
+              + fncName.text + "\" and " + allFncParamTypes + ")";
+       // Old Name
+       /*
        name = "function of name \""
               + fncName.text
               + "has " + allFncParamTypes;
+      */
 
       if(allAttributes.has(name)){
         attributes.push(allAttributes.get(name));
@@ -1584,16 +1733,15 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
    fncTypes = [];
 
    // Modifies member variable with specific name
-   var modifiesMemberVar = fnc.findall('block/expr_stmt/expr');
+   let modifiesMemberVar = fnc.findall('block/expr_stmt/expr');
    if (modifiesMemberVar != null){
-     for (var n = 0; n < modifiesMemberVar.length; n++){
+     for (let n = 0; n < modifiesMemberVar.length; n++){
 
-       var mod = modifiesMemberVar[n];
-       var attrName = mod.find('name/name');
-       var op = mod.find('operator');
-       var call = mod.find('call/name/name');
+       let mod = modifiesMemberVar[n];
+       let attrName = mod.find('name/name');
+       let op = mod.find('operator');
+       let call = mod.find('call/name/name');
 
-       //console.log(call);
        if (attrName != null && attrName.text == "this" && op != null && op.text == "="
            && call != null){
 
@@ -1611,7 +1759,7 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
    }
 
    // Combines searches for (1) is void and (2) returns type
-   var returnType = fnc.find('type/name');
+   let returnType = fnc.find('type/name');
    if(returnType != null){
      // Check for list: when the return type is a list, the function's
      // type nests the list name with other arguments.
@@ -1620,9 +1768,15 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
      }
      // (1) Is void
      if (returnType.text == "void"){
+       // New name
+       name =  "class must have function with ( type \"void\" and name \""
+                + fncName.text + "\" )";
+       // Old Name
+       /*
        name =  "class with function of name \""
                 + fncName.text
                 + "\" of type \"void\"";
+        */
        if(allAttributes.has(name)){
          attributes.push(allAttributes.get(name));
        }
@@ -1631,10 +1785,17 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
      // (2) Returns type...
      else{
 
+       // New name
+       name =  "class must have function with ( type \"" + returnType.text + "\" and name \""
+                + fncName.text + "\" )";
+
+       // Old name
+       /*
        name = "class with function of name \""
                + fncName.text
                + "\" returns type \""
                + returnType.text + "\"";
+        */
 
        if(allAttributes.has(name)){
          attributes.push(allAttributes.get(name));
@@ -1644,34 +1805,44 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
    }
 
    // Has annotation
-   var fncAnnotCandidate = fnc.findall('annotation');
+   let fncAnnotCandidate = fnc.findall('annotation');
    if (fncAnnotCandidate != null){
 
-     for (var h = 0; h < fncAnnotCandidate.length; h++){
+     for (let h = 0; h < fncAnnotCandidate.length; h++){
 
-       var fncAnnot = fncAnnotCandidate[h];
+       let fncAnnot = fncAnnotCandidate[h];
+       // New name
+       name = "class must have function with ( annotation \""
+              + (fncAnnot.find('name')).text + "\" and name \""
+              + fncName.text + "\" )";
+
+       // Old name
+       /*
        name = "function of name \"" + fncName.text
                + "\" has annotation \"@"
                + (fncAnnot.find('name')).text
                + "\"";
-        var annotArgs = fncAnnot.findall('argument/expr');
+      */
+
+        /*
+        let annotArgs = fncAnnot.findall('argument/expr');
 
         if(annotArgs.length > 0){
           name += " with \n";
-          for(var z = 0; z < annotArgs.length; z++){
+          for(let z = 0; z < annotArgs.length; z++){
 
-            var node = annotArgs[z];
+            let node = annotArgs[z];
 
-            for(var u = 0; u < (node._children).length; u++){
+            for(let u = 0; u < (node._children).length; u++){
 
-              var ch = (node._children)[u];
+              let ch = (node._children)[u];
 
               if(ch.text != null){
                 name += ch.text;
               }
               else{
-                for(var v = 0; v < (ch._children).length; v++){
-                  var c = (ch._children)[v];
+                for(let v = 0; v < (ch._children).length; v++){
+                  let c = (ch._children)[v];
                   if(c.text != null){
                     name += c.text;
                   }
@@ -1684,6 +1855,7 @@ exports.addClsFunctions = function(subCL, attributes, allAttributes){
           // Remove trailing newline
           name = name.slice(0, -1);
         }
+        */
 
         if(allAttributes.has(name)){
           attributes.push(allAttributes.get(name));

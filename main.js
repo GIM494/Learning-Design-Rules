@@ -33,6 +33,10 @@ var classLocations = new Map();
 // Used to keep track of what xml files were used to create what databases
 var fileAnalysisMap = new Map();
 
+// List of custom queries that should be searched for
+var customQueries = new Array();
+customQueries.push(".//name");
+
 // This class is used later to group info about parent classes
 class classNode {
     constructor() {
@@ -173,9 +177,8 @@ for (const group of groupList.keys()) {
 
 }
 
-//console.log(queryMap);
-
-//console.log(allAttributes);
+// Add any custom attributes
+sci.findCustomRelations(id_start, customQueries, allAttributes, queryMap);
 
 // Output the metadata to a file
 var outputFile = "attributeMETAdata_crowdCode.txt";
@@ -188,10 +191,32 @@ for (const group of groupList.keys()){
                                classLocations, parentInfo, fileAnalysisMap, dataMap);
 }
 
-// This variable is an array of all of our databases in the format:
+
+// Now look for customRelations
+
+for (const group of groupList.keys()){
+  var grouping = groupList.get(group);
+  sci.addCustomRelations(allAttributes, customQueries, grouping, analysisFileName,
+                               classLocations, parentInfo, fileAnalysisMap, dataMap);
+}
+
+// finalFormat is an array of all of our databases in the format:
 //[ ["nameOfFile.txt", "data that is going to be written into file"],
 // ["nextFile.txt", "some other data"]]
 var databases = Array.from(dataMap.entries());
-console.log((dataMap.keys()));
+var finalFormat = sci.outputDatabases(databases);
+
+/* For testing purposes
+console.log(Array.from(groupList.keys()).length);
+var k = Array.from(groupList.keys());
+var q = Array.from(dataMap.entries());
+for(var i = 0; i < k.length; i++){
+  console.log(groupList.get(k[i]).length);
+  console.log(q[i][1].length);
+}
+
+//sci.outputToFileDatabses(databases);
+*/
+
 
 sci.outputFileAnalysisData(fileAnalysisMap);
